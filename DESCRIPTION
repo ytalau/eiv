@@ -1,0 +1,17 @@
+Package: sme
+Title: The Study of Measurement Errors
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Abby",
+           family = "Lau",
+           role = c("aut", "cre"),
+           email = "yuen.lau@uconn.edu",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description:  This is an internal package for studying the measurement errors in longitudinal data.
+License: GPL (>= 3)
+Depends: R (>= 3.5.0)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0
+Imports: nleqslv
