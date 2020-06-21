@@ -1,17 +1,22 @@
 Package: sme
+Type: Package
 Title: The Study of Measurement Errors
 Version: 0.0.0.9000
+Date: 2020-06-18
 Authors@R: 
     person(given = "Abby",
            family = "Lau",
            role = c("aut", "cre"),
-           email = "yuen.lau@uconn.edu",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description:  This is an internal package for studying the measurement errors in longitudinal data.
+           email = "yuen.lau@uconn.edu")
+Description: This is an internal package for studying measurement errors in the longitudinal data setting.
 License: GPL (>= 3)
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
+Imports: Rcpp (>= 1.0.4.6),
+    nleqslv,
+    stats
+LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.1.0
-Imports: nleqslv
+
