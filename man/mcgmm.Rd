@@ -6,20 +6,18 @@
 Measurement Errors Corrected}
 \usage{
 mcgmm(
-  init.beta,
   formula,
   data,
   me.var,
   mcov,
   time.var,
   id.var,
+  init.beta,
   family = "binomial",
   control = list()
 )
 }
 \arguments{
-\item{init.beta}{The initial guess of the estimates}
-
 \item{formula}{a symbolic description of the model}
 
 \item{data}{a data frame that contains variables in the model
@@ -33,6 +31,10 @@ and corresponding a variables identifying subjects and time points}
 the data}
 
 \item{id.var}{name of variable that identifies clusters in the data}
+
+\item{init.beta}{The initial guess of the estimates}
+
+\item{family}{the family of response variable}
 
 \item{control}{a list of parameters that pass into the estimating process}
 }
