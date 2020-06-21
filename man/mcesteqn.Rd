@@ -4,7 +4,7 @@
 \alias{mcesteqn}
 \title{Generate and Correct Generalized Estimating Equations}
 \usage{
-mcesteqn(beta, lb, n, dm, mcov, ind, Y)
+mcesteqn(beta, lb, n, m, X, mcov, ind, Y)
 }
 \arguments{
 \item{beta}{The value of covariates}
@@ -13,7 +13,9 @@ mcesteqn(beta, lb, n, dm, mcov, ind, Y)
 
 \item{n}{the total number of observations}
 
-\item{dm}{model matrix for the covariates for each ID}
+\item{m}{the number of observations for each subject}
+
+\item{X}{model matrix for the covariates for each ID}
 
 \item{mcov}{the covariance matrix for the surrogate variables}
 

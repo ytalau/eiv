@@ -1,4 +1,9 @@
-
+#' @useDynLib sme
+#' @importFrom Rcpp evalCpp
+#' @importFrom stats as.formula model.matrix model.response model.extract
+#' model.frame
+#'
+#'
 #' @title Generate and Correct Generalized Estimating Equations
 #'
 #' @description The \code{mcesteqn} function generates the corrected generalized
@@ -14,13 +19,13 @@
 #' @param lb the dimension of covariates
 #' @param n the total number of observations
 #' @param m the number of observations for each subject
-#' @param dm model matrix for the covariates for each ID
+#' @param X model matrix for the covariates for each ID
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
 #' @param Y the response variable vector for each ID
 #' @export mcesteqn
 
-mcesteqn <- function(beta, lb, n, m,dm, mcov,
+mcesteqn <- function(beta, lb, n, m, X, mcov,
                        ind, Y) {
     d <- matrix(0, nrow = lb, ncol = lb*m)
     v <- matrix(0, nrow = lb*m, ncol = lb*m)
@@ -28,9 +33,9 @@ mcesteqn <- function(beta, lb, n, m,dm, mcov,
     for (i in 1:n) {
         ui <- numeric(lb*m)
         di <- matrix(0, nrow = lb, ncol = lb*m)
-        m <- nrow(dm[[i]])
+        m <- nrow(X[[i]])
         for (j in 1:m) {
-            u <- dm[[i]][j, ]
+            u <- X[[i]][j, ]
             a <- u %*% beta
             tmp <- drop(mcov %*% beta[ind])
             b <- tmp %*% beta[ind]
@@ -86,12 +91,13 @@ mcesteqn <- function(beta, lb, n, m,dm, mcov,
 #' the data
 #' @param id.var name of variable that identifies clusters in the data
 #' @param control a list of parameters that pass into the estimating process
+#' @param family the family of response variable
 #' @importFrom nleqslv nleqslv
 #' @export mcgmm
 
 ## need to add the control element
-mcgmm <- function(init.beta, formula, data, me.var, mcov,
-                  time.var, id.var, family = "binomial",
+mcgmm <- function(formula, data, me.var, mcov,
+                  time.var, id.var, init.beta, family = "binomial",
                   control = list()) {
     ## step one order the data set
     idx_id <- which(colnames(data) %in% id.var)
@@ -102,15 +108,15 @@ mcgmm <- function(init.beta, formula, data, me.var, mcov,
     dat1 <- split(dat, dat$id)
     formula <- as.formula(formula)
     mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
-    dm <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
+    X <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
     Y <-  lapply(1:length(mf), function(i) model.response(mf[[i]]))
-    ind <- which(colnames(dm[[1]]) %in% me.var)
+    ind <- which(colnames(X[[1]]) %in% me.var)
     n <- length(mf)
     lb <- length(init.beta)
-    m <- nrow(dm[[1]])
+    m <- nrow(X[[1]])
     control <- do.call("mcgmm.control", control)
     res <- nleqslv(init.beta, fn = mcesteqn,
-                   lb = lb, n = n, m = m, dm = dm, mcov = mcov,
+                   lb = lb, n = n, m = m, X = X, mcov = mcov,
                    ind = ind, Y = Y,
                    control = control)
     coeffs <- res$x
