@@ -37,7 +37,7 @@ arma::mat mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
             d2(pos, pos) = mcov;
-            di.cols(j*lb, (j + 1L)*lb - 1L) = ay*(a-1L)*(d2 - d1);
+            di.cols(j*lb, (j + 1L)*lb - 1L) = ay*(weight-1L)*(d2 - d1);
         }
         arma::mat vi = ui * ui.t();
         d += di;
