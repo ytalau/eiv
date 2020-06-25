@@ -1,6 +1,6 @@
-Package: sme
+Package: eiv
 Type: Package
-Title: The Study of Measurement Errors
+Title: The Study of Measurement Errors in Variables
 Version: 0.0.0.9000
 Date: 2020-06-18
 Authors@R: 

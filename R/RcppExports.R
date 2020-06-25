@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 mcesteqn <- function(lb, m, n, X, Y, beta, mcov, ind) {
-    .Call('_sme_mcesteqn', PACKAGE = 'sme', lb, m, n, X, Y, beta, mcov, ind)
+    .Call('_eiv_mcesteqn', PACKAGE = 'eiv', lb, m, n, X, Y, beta, mcov, ind)
 }
 

@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // mcesteqn
 arma::mat mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind);
-RcppExport SEXP _sme_mcesteqn(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP) {
+RcppExport SEXP _eiv_mcesteqn(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,11 +26,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_sme_mcesteqn", (DL_FUNC) &_sme_mcesteqn, 8},
+    {"_eiv_mcesteqn", (DL_FUNC) &_eiv_mcesteqn, 8},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_sme(DllInfo *dll) {
+RcppExport void R_init_eiv(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
