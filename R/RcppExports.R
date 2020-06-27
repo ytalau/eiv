@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 rcpp_mcesteqn <- function(lb, m, n, X, Y, beta, mcov, ind) {
-    .Call('_eiv_rcpp_mcesteqn', PACKAGE = 'eiv', lb, m, n, X, Y, beta, mcov, ind)
+    .Call(`_eiv_rcpp_mcesteqn`, lb, m, n, X, Y, beta, mcov, ind)
 }
 

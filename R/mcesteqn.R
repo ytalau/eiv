@@ -1,5 +1,3 @@
-#' @useDynLib eiv
-#' @importFrom Rcpp evalCpp
 #' @importFrom stats as.formula model.matrix model.response model.extract
 #' model.frame terms
 #'
