@@ -5,10 +5,10 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::mat mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
-                   arma::vec beta,
-                   arma::mat mcov,
-                   arma::uvec ind) {
+arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
+                        arma::vec beta,
+                        arma::mat mcov,
+                        arma::uvec ind) {
     // maybe I should move this to other functions
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
@@ -52,7 +52,7 @@ arma::mat mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::mat out = dold * us;
-    return dold;
+    return out;
 
 }
 

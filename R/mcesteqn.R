@@ -1,7 +1,7 @@
 #' @useDynLib eiv
 #' @importFrom Rcpp evalCpp
 #' @importFrom stats as.formula model.matrix model.response model.extract
-#' model.frame
+#' model.frame terms
 #'
 #'
 #' @title Generate and Correct Generalized Estimating Equations
@@ -69,6 +69,69 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
     return(out)
 }
 
+#' @title Generate and Correct Generalized Estimating Equations via Rcpp
+#'
+#' @description The \code{mcesteqn_rcpp} function is the rcpp version of the
+#' function \code{mcesteqn}.
+#'
+#' @name mcesteqn_rcpp
+#'
+#'
+#' @param beta The value of covariates
+#' @param lb the dimension of covariates
+#' @param n the total number of observations
+#' @param m the number of observations for each subject
+#' @param X model matrix for the covariates for each ID
+#' @param ind the index of the surrogate covariates
+#' @param mcov the covariance matrix for the surrogate variables
+#' @param Y the response variable vector for each ID
+#' @export mcesteqn_rcpp
+
+mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind) {
+    rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind)
+}
+
+
+#' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
+#'
+#' @description This function is built to process data in a way that all
+#' the obversations are grouped by the time variable.
+#'
+#' @name process_mcgmm
+#'
+#'
+#' @param formula a symbolic description of the model
+#' @param data a data frame that contains variables in the model
+#' and corresponding a variables identifying subjects and time points
+#' @param me.var names of variables with measurement errors in the data
+#' @param time.var name of variable that identifies different time points in
+#' the data
+#' @param id.var name of variable that identifies clusters in the data
+#' @export process_mcgmm
+
+
+process_mcgmm <- function(formula, data, me.var,
+                          time.var, id.var) {
+    ## step one order the data set
+    idx_id <- which(colnames(data) %in% id.var)
+    idx_tm <- which(colnames(data) %in% time.var)
+    ## cannot work with data.table; need to figure this out in the future
+    idx_id.time <- order(data[id.var], data[time.var])
+    dat <- data[idx_id.time, ]
+    dat1 <- split(dat, dat$id)
+    formula <- as.formula(formula)
+    lb <- length(attr(terms(formula), "term.labels")) +
+        attr(terms(formula), "intercept")
+    mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
+    X <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
+    Y <-  lapply(1:length(mf), function(i) model.response(mf[[i]]))
+    ind <- which(colnames(X[[1]]) %in% me.var)
+    n <- length(mf)
+    m <- nrow(X[[1]])
+    return(list(X = X, Y = Y, ind = ind, n = n, m = m, lb = lb))
+}
+
+
 
 #' @title Estimation via Generalized Method of Moments Approach with
 #' Measurement Errors Corrected
@@ -99,31 +162,64 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
 mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
                   control = list()) {
-    ## step one order the data set
-    idx_id <- which(colnames(data) %in% id.var)
-    idx_tm <- which(colnames(data) %in% time.var)
-    ## cannot work with data.table; need to figure this out in the future
-    idx_id.time <- order(data[id.var], data[time.var])
-    dat <- data[idx_id.time, ]
-    dat1 <- split(dat, dat$id)
-    formula <- as.formula(formula)
-    mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
-    X <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
-    Y <-  lapply(1:length(mf), function(i) model.response(mf[[i]]))
-    ind <- which(colnames(X[[1]]) %in% me.var)
-    n <- length(mf)
-    lb <- length(init.beta)
-    m <- nrow(X[[1]])
+    dat_out <- process_mcgmm(formula, data, me.var,
+                             time.var, id.var)
     control <- do.call("mcgmm.control", control)
-    res <- nleqslv(init.beta, fn = mcesteqn,
-                   lb = lb, n = n, m = m, X = X, mcov = mcov,
-                   ind = ind, Y = Y,
+    res <- nleqslv(init.beta, fn = rcpp_mcesteqn,
+                   lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
+                   X = dat_out$X, mcov = mcov,
+                   ind = dat_out$ind, Y = dat_out$Y,
                    control = control)
     coeffs <- res$x
     convergence <- res$termcd
     return(list(coefficients = coeffs, convergence = convergence))
 
 }
+
+#' @title Estimation via Generalized Method of Moments Approach with
+#' Measurement Errors Corrected (R implementation)
+#'
+#' @description The \code{mcgmm_R} function returns the estimation by combining
+#' and solving measurement errors corrected estimating equations via generalized
+#' method of moments. This function is a pure R implementation.
+#'
+#' @name mcgmm_R
+#'
+#' @details The input of data must be a data.frame.
+#'
+#' @param init.beta The initial guess of the estimates
+#' @param formula a symbolic description of the model
+#' @param data a data frame that contains variables in the model
+#' and corresponding a variables identifying subjects and time points
+#' @param me.var names of variables with measurement errors in the data
+#' @param mcov the covariance matrix for the surrogate variables
+#' @param time.var name of variable that identifies different time points in
+#' the data
+#' @param id.var name of variable that identifies clusters in the data
+#' @param control a list of parameters that pass into the estimating process
+#' @param family the family of response variable
+#' @importFrom nleqslv nleqslv
+#' @export mcgmm_R
+
+
+mcgmm_R <- function(formula, data, me.var, mcov,
+                  time.var, id.var, init.beta, family = "binomial",
+                  control = list()) {
+    dat_out <- process_mcgmm(formula, data, me.var,
+                             time.var, id.var)
+    control <- do.call("mcgmm.control", control)
+    res <- nleqslv(init.beta, fn = mcesteqn,
+                   lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
+                   X = dat_out$X, mcov = mcov,
+                   ind = dat_out$ind, Y = dat_out$Y,
+                   control = control)
+    coeffs <- res$x
+    convergence <- res$termcd
+    return(list(coefficients = coeffs, convergence = convergence))
+
+}
+
+
 
 
 #' @title Estimation via Generalized Method of Moments Approach with
