@@ -5,3 +5,7 @@ rcpp_mcesteqn <- function(lb, m, n, X, Y, beta, mcov, ind) {
     .Call(`_eiv_rcpp_mcesteqn`, lb, m, n, X, Y, beta, mcov, ind)
 }
 
+rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind) {
+    .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind)
+}
+

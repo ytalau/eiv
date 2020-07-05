@@ -89,6 +89,26 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind) {
     rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind)
 }
 
+#' @title Produce Inference Terms
+#'
+#' @description Produces inference terms like asymptotic variance.
+#'
+#' @name inference_rcpp
+#'
+#'
+#' @param beta the stimated covariates
+#' @param lb the dimension of covariates
+#' @param n the total number of observations
+#' @param m the number of observations for each subject
+#' @param X model matrix for the covariates for each ID
+#' @param ind the index of the surrogate covariates
+#' @param mcov the covariance matrix for the surrogate variables
+#' @param Y the response variable vector for each ID
+#' @export inference_rcpp
+
+inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind) {
+    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind)
+}
 
 #' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
 #'
@@ -170,7 +190,12 @@ mcgmm <- function(formula, data, me.var, mcov,
                    control = control)
     coeffs <- res$x
     convergence <- res$termcd
-    return(list(coefficients = coeffs, convergence = convergence))
+    out <- inference_rcpp(lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
+                          X = dat_out$X, mcov = mcov,
+                          ind = dat_out$ind, Y = dat_out$Y, beta = coeffs)
+    fit <- list(coefficients = coeffs, convergence = convergence)
+    class(fit) <- "mcgmm"
+    fit
 
 }
 
@@ -247,6 +272,7 @@ mcgmm.control <- function(epsilon = 1e-8 ,
     list(xtol = epsilon,
          trace = as.integer(trace), maxit = maxit)
 }
+
 
 
 

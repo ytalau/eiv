@@ -56,3 +56,59 @@ arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
 
 }
 
+
+// [[Rcpp::export]]
+Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
+                          arma::vec beta,
+                          arma::mat mcov,
+                          arma::uvec ind) {
+    arma::uvec pos = ind - 1;
+    arma::mat d = arma::zeros(lb, lb*m);
+    arma::mat v = arma::zeros(lb*m, lb*m);
+    arma::mat us = arma::zeros(lb*m);
+    for (int i = 0; i < n; i++) {
+        arma::mat ui = arma::zeros(lb*m);
+        arma::mat di = arma::zeros(lb, lb*m);
+        arma::mat X1 = X[i];
+        arma::vec Y1 = Y[i];
+        for (int j = 0; j < X1.n_rows; j++) {
+            arma::mat u = X1.row(j);
+            double a = as_scalar(u * beta);
+            arma::mat tmp = beta.elem(pos).t() * mcov;
+            arma::mat b = tmp * beta.elem(pos);
+            double weight = as_scalar(exp(-a - b/2) + 1L);
+            double ay = as_scalar(Y1.row(j));
+            // think about the dimension
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight*ay-1L)*u.t();
+            ui.elem(j*lb + pos) += (weight-1L)*ay*tmp.t();
+            arma::mat u1 = u;
+            u1.elem(pos) += tmp;
+            arma::mat d1 = u1.t() * u1;
+            arma::mat d2 = arma::zeros(lb, lb);
+            d2(pos, pos) = mcov;
+            di.cols(j*lb, (j + 1L)*lb - 1L) = ay*(weight-1L)*(d2 - d1);
+        }
+        arma::mat vi = ui * ui.t();
+        d += di;
+        v += vi;
+        us += ui;
+    }
+    us = us/n;
+    arma::mat vi = us * us.t();
+    v = v/n - vi;
+    v = v/n;
+    d = d/n;
+    arma::mat vinv = inv(v);
+    arma::mat dold = d * vinv;
+    arma::mat acov = inv(dold * d.t());
+    arma::mat out = dold * us;
+    return Rcpp::List::create(
+        Rcpp::Named("v") = v,
+        Rcpp::Named("vinv") = vinv,
+        Rcpp::Named("d") = d,
+        Rcpp::Named("us") = us,
+        Rcpp::Named("acov") = acov,
+        Rcpp::Named("mcesteqn") = out
+    );
+
+}
