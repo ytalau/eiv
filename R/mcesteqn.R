@@ -142,11 +142,13 @@ process_mcgmm <- function(formula, data, me.var,
         attr(terms(formula), "intercept")
     mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
     X <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
+    xnames <- dimnames(X[[1]])[[2]]
     Y <-  lapply(1:length(mf), function(i) model.response(mf[[i]]))
     ind <- which(colnames(X[[1]]) %in% me.var)
     n <- length(mf)
     m <- nrow(X[[1]])
-    return(list(X = X, Y = Y, ind = ind, n = n, m = m, lb = lb))
+    return(list(X = X, Y = Y, ind = ind, n = n, m = m, lb = lb,
+                xnames = xnames))
 }
 
 
@@ -174,12 +176,13 @@ process_mcgmm <- function(formula, data, me.var,
 #' @param control a list of parameters that pass into the estimating process
 #' @param family the family of response variable
 #' @importFrom nleqslv nleqslv
-#' @export mcgmm
+#' @export
 
 ## need to add the control element
 mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
                   control = list()) {
+    call <- match.call()
     dat_out <- process_mcgmm(formula, data, me.var,
                              time.var, id.var)
     control <- do.call("mcgmm.control", control)
@@ -190,10 +193,14 @@ mcgmm <- function(formula, data, me.var, mcov,
                    control = control)
     coeffs <- res$x
     convergence <- res$termcd
+    ## should we include this in the summary.mcgmm?
     out <- inference_rcpp(lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y, beta = coeffs)
-    fit <- list(coefficients = coeffs, convergence = convergence)
+    names(coeffs) <- res$xnames
+    fit <- list(call = call,
+                coefficients = coeffs, convergence = convergence)
+
     class(fit) <- "mcgmm"
     fit
 
