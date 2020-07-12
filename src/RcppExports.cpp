@@ -7,7 +7,7 @@
 using namespace Rcpp;
 
 // rcpp_mcesteqn
-arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind);
+arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind);
 RcppExport SEXP _eiv_rcpp_mcesteqn(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

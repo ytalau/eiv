@@ -5,7 +5,7 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
+arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                         arma::vec beta,
                         arma::mat mcov,
                         arma::uvec ind) {
@@ -13,7 +13,7 @@ arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
-    arma::mat us = arma::zeros(lb*m);
+    arma::vec us = arma::zeros(lb*m);
     for (int i = 0; i < n; i++) {
         arma::mat ui = arma::zeros(lb*m);
         arma::mat di = arma::zeros(lb, lb*m);
@@ -21,18 +21,18 @@ arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         arma::vec Y1 = Y[i];
         for (int j = 0; j < X1.n_rows; j++) {
             // do I need to use clone here?
-            arma::mat u = X1.row(j);
+            arma::rowvec u = X1.row(j);
             // figure out the dimension here what is double what is not?
             double a = as_scalar(u * beta);
-            arma::mat tmp = beta.elem(pos).t() * mcov;
-            arma::mat b = tmp * beta.elem(pos);
+            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            double b = as_scalar(tmp * beta.elem(pos));
             // not necessarily weights; think about other families for future design
-            double weight = as_scalar(exp(-a - b/2) + 1L);
+            double weight = exp(-a - b/2) + 1;
             double ay = as_scalar(Y1.row(j));
             // think about the dimension
             ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight*ay-1L)*u.t();
             ui.elem(j*lb + pos) += (weight-1L)*ay*tmp.t();
-            arma::mat u1 = u;
+            arma::rowvec u1 = u;
             u1.elem(pos) += tmp;
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
@@ -51,7 +51,7 @@ arma::mat rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     d = d/n;
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
-    arma::mat out = dold * us;
+    arma::vec out = dold * us;
     return out;
 
 }
@@ -65,23 +65,23 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
-    arma::mat us = arma::zeros(lb*m);
+    arma::vec us = arma::zeros(lb*m);
     for (int i = 0; i < n; i++) {
         arma::mat ui = arma::zeros(lb*m);
         arma::mat di = arma::zeros(lb, lb*m);
         arma::mat X1 = X[i];
         arma::vec Y1 = Y[i];
         for (int j = 0; j < X1.n_rows; j++) {
-            arma::mat u = X1.row(j);
+            arma::rowvec u = X1.row(j);
             double a = as_scalar(u * beta);
-            arma::mat tmp = beta.elem(pos).t() * mcov;
-            arma::mat b = tmp * beta.elem(pos);
-            double weight = as_scalar(exp(-a - b/2) + 1L);
+            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            double b = as_scalar(tmp * beta.elem(pos));
+            double weight = exp(-a - b/2) + 1;
             double ay = as_scalar(Y1.row(j));
             // think about the dimension
             ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight*ay-1L)*u.t();
             ui.elem(j*lb + pos) += (weight-1L)*ay*tmp.t();
-            arma::mat u1 = u;
+            arma::rowvec u1 = u;
             u1.elem(pos) += tmp;
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
@@ -101,7 +101,7 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::mat acov = inv(dold * d.t());
-    arma::mat out = dold * us;
+    arma::vec out = dold * us;
     return Rcpp::List::create(
         Rcpp::Named("v") = v,
         Rcpp::Named("vinv") = vinv,
