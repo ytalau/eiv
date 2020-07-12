@@ -1,5 +1,5 @@
 #' @importFrom stats as.formula model.matrix model.response model.extract
-#' model.frame terms
+#' model.frame terms pchisq printCoefmat
 #'
 #'
 #' @title Generate and Correct Generalized Estimating Equations
@@ -137,7 +137,7 @@ process_mcgmm <- function(formula, data, me.var,
     idx_id.time <- order(data[id.var], data[time.var])
     dat <- data[idx_id.time, ]
     dat1 <- split(dat, dat$id)
-    formula <- as.formula(formula)
+    #formula <- as.formula(formula)
     lb <- length(attr(terms(formula), "term.labels")) +
         attr(terms(formula), "intercept")
     mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
@@ -183,6 +183,7 @@ mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
                   control = list()) {
     call <- match.call()
+    formula <- as.formula(formula)
     dat_out <- process_mcgmm(formula, data, me.var,
                              time.var, id.var)
     control <- do.call("mcgmm.control", control)
@@ -192,14 +193,31 @@ mcgmm <- function(formula, data, me.var, mcov,
                    ind = dat_out$ind, Y = dat_out$Y,
                    control = control)
     coeffs <- res$x
-    convergence <- res$termcd
-    ## should we include this in the summary.mcgmm?
-    out <- inference_rcpp(lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
+    convergence_code <- res$termcd
+    names(coeffs) <- dat_out$xnames
+    inf <- inference_rcpp(beta = coeffs,
+                          lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
-                          ind = dat_out$ind, Y = dat_out$Y, beta = coeffs)
-    names(coeffs) <- res$xnames
+                          ind = dat_out$ind, Y = dat_out$Y)
+    convergence_message <-
+        switch(convergence_code,
+               "Convergence of function values has been achieved",
+               paste("The relative distance between consecutive solutions",
+                     "is smaller than specified xtol value without convergence",
+                     "of function values"),
+               "No better point found without convergence of function values",
+               "Iteration limit maxit exceeded without convergence")
     fit <- list(call = call,
-                coefficients = coeffs, convergence = convergence)
+                mcov = mcov,
+                inf = inf,
+                formula = formula,
+                X = dat_out$X,
+                Y = dat_out$Y,
+                coefficients = coeffs,
+                convergence_code = convergence_code,
+                convergence_message = convergence_message,
+                me.var = me.var)
+
 
     class(fit) <- "mcgmm"
     fit
@@ -280,6 +298,35 @@ mcgmm.control <- function(epsilon = 1e-8 ,
          trace = as.integer(trace), maxit = maxit)
 }
 
+
+#' @export
+summary.mcgmm <- function(object, ...) {
+
+    inf <- object$inf
+    coef.matrix <- data.frame(Estimate = unname(object$coefficients),
+                              Std.Err = sqrt(diag(inf$acov)))
+    coef.matrix$wald <- (coef.matrix$Estimate / coef.matrix$Std.Err)^2
+    coef.matrix$chi.squared <- 1 - pchisq(coef.matrix$wald, df = 1)
+    colnames(coef.matrix) <- c("Estimate", "Std.Err", "Wald", "Pr(>z)")
+    rownames(coef.matrix) <- names(object$coefficients)
+    mcov <- as.matrix(object$mcov)
+    dimnames(mcov)[[1]] <- object$me.var
+    dimnames(mcov)[[2]] <- object$me.var
+    out <- list(formula = object$formula,
+                call = object$call,
+                mcov = mcov,
+                X = object$X,
+                Y = object$Y,
+                convergence_code = object$convergence_code,
+                convergence_message = object$convergence_message,
+                D_matrix = inf$d,
+                vcov = inf$acov,
+                V_inv = inf$vinv,
+                esteqn = inf$us,
+                coef.matrix = coef.matrix)
+    class(out) <- "summary.mcgmm"
+    out
+}
 
 
 
