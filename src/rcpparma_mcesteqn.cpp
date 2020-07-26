@@ -48,6 +48,8 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vi = us * us.t();
     v = v/n - vi;
     v = v/n;
+    double  k = 1/n;
+    if (det(v) == 0) v = v + k * arma::eye(lb*m, lb*m);
     d = d/n;
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
@@ -97,10 +99,14 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vi = us * us.t();
     v = v/n - vi;
     v = v/n;
+    double  k = 1/n;
+    if (det(v) == 0) v = v + k * arma::eye(lb*m, lb*m);
     d = d/n;
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
-    arma::mat acov = inv(dold * d.t());
+    arma::mat acovinv = dold * d.t();
+    if (det(acovinv) == 0) acovinv = acovinv + k * arma::eye(lb, lb);
+    arma::mat acov = inv(acovinv);
     arma::vec out = dold * us;
     return Rcpp::List::create(
         Rcpp::Named("v") = v,
