@@ -4,7 +4,7 @@
 \alias{mcesteqn_rcpp}
 \title{Generate and Correct Generalized Estimating Equations via Rcpp}
 \usage{
-mcesteqn_rcpp(lb, m, n, X, Y, beta, mcov, ind)
+mcesteqn_rcpp(lb, m, n, X, Y, beta, mcov, ind, modify_vinv)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -22,6 +22,9 @@ mcesteqn_rcpp(lb, m, n, X, Y, beta, mcov, ind)
 \item{mcov}{the covariance matrix for the surrogate variables}
 
 \item{ind}{the index of the surrogate covariates}
+
+\item{modify_vinv}{a logical variable indicating whether or not the matrix
+should be modified for the inversion}
 }
 \description{
 The \code{mcesteqn_rcpp} function is the rcpp version of the

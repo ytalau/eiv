@@ -8,7 +8,8 @@
 arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                         arma::vec beta,
                         arma::mat mcov,
-                        arma::uvec ind) {
+                        arma::uvec ind,
+                        bool modify_vinv) {
     // maybe I should move this to other functions
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
@@ -49,7 +50,7 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     v = v/n - vi;
     v = v/n;
     double  k = 1/n;
-    if (det(v) == 0) v = v + k * arma::eye(lb*m, lb*m);
+    if (modify_vinv) v = v + k * arma::eye(lb*m, lb*m);
     d = d/n;
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
@@ -100,12 +101,24 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     v = v/n - vi;
     v = v/n;
     double  k = 1/n;
-    if (det(v) == 0) v = v + k * arma::eye(lb*m, lb*m);
+    arma::vec s = svd(v);
+    double cond = s.max()/s.min();
+    bool modify_vinv = 0;
+    if (cond == arma::datum::inf) {
+        v = v + k * arma::eye(lb*m, lb*m);
+        modify_vinv = 1;
+    }
     d = d/n;
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();
-    if (det(acovinv) == 0) acovinv = acovinv + k * arma::eye(lb, lb);
+    arma::vec c = svd(acovinv);
+    double cond_c = c.max()/c.min();
+    bool modify_acovinv = 0;
+    if (cond_c == arma::datum::inf) {
+        acovinv = acovinv + k * arma::eye(lb, lb);
+        modify_acovinv = 1;
+    }
     arma::mat acov = inv(acovinv);
     arma::vec out = dold * us;
     return Rcpp::List::create(
@@ -114,6 +127,8 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         Rcpp::Named("d") = d,
         Rcpp::Named("us") = us,
         Rcpp::Named("acov") = acov,
+        Rcpp::Named("modify_vinv") = modify_vinv,
+        Rcpp::Named("modify_acovinv") = modify_acovinv,
         Rcpp::Named("mcesteqn") = out
     );
 

@@ -82,11 +82,13 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
 #' @param X model matrix for the covariates for each ID
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
+#' @param modify_vinv a logical variable indicating whether or not the matrix
+#' should be modified for the inversion
 #' @param Y the response variable vector for each ID
 #' @export mcesteqn_rcpp
 
-mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind) {
-    rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind)
+mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_vinv) {
+    rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind, modify_vinv)
 }
 
 #' @title Produce Inference Terms
@@ -175,13 +177,15 @@ process_mcgmm <- function(formula, data, me.var,
 #' @param id.var name of variable that identifies clusters in the data
 #' @param control a list of parameters that pass into the estimating process
 #' @param family the family of response variable
+#' @param modify_vinv a logical variable indicating whether or not the matrix
+#' should be modified for the inversion
 #' @importFrom nleqslv nleqslv
 #' @export
 
 ## need to add the control element
 mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
-                  control = list()) {
+                  control = list(), modify_vinv) {
     call <- match.call()
     formula <- as.formula(formula)
     dat_out <- process_mcgmm(formula, data, me.var,
@@ -191,7 +195,8 @@ mcgmm <- function(formula, data, me.var, mcov,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,
                    ind = dat_out$ind, Y = dat_out$Y,
-                   control = control)
+                   control = control,
+                   modify_vinv = as.integer(modify_vinv))
     coeffs <- res$x
     convergence_code <- res$termcd
     names(coeffs) <- dat_out$xnames
@@ -214,6 +219,8 @@ mcgmm <- function(formula, data, me.var, mcov,
                 X = dat_out$X,
                 Y = dat_out$Y,
                 coefficients = coeffs,
+                modify_vinv_inf = inf$modify_vinv,
+                modify_acovinv = inf$modify_acovinv,
                 convergence_code = convergence_code,
                 convergence_message = convergence_message,
                 me.var = me.var)
@@ -321,6 +328,8 @@ summary.mcgmm <- function(object, ...) {
                 convergence_message = object$convergence_message,
                 D_matrix = inf$d,
                 vcov = inf$acov,
+                modify_vinv_inf = inf$modify_vinv,
+                modify_acovinv = inf$modify_acovinv,
                 V_inv = inf$vinv,
                 esteqn = inf$us,
                 coef.matrix = coef.matrix)

@@ -14,7 +14,8 @@ mcgmm(
   id.var,
   init.beta,
   family = "binomial",
-  control = list()
+  control = list(),
+  modify_vinv
 )
 }
 \arguments{
@@ -37,6 +38,9 @@ the data}
 \item{family}{the family of response variable}
 
 \item{control}{a list of parameters that pass into the estimating process}
+
+\item{modify_vinv}{a logical variable indicating whether or not the matrix
+should be modified for the inversion}
 }
 \description{
 The \code{mcgmm} function returns the estimation by combining
