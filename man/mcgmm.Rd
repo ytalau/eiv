@@ -15,7 +15,9 @@ mcgmm(
   init.beta,
   family = "binomial",
   control = list(),
-  modify_vinv
+  maxit = 100,
+  eig_tol = 1e-06,
+  conv_tol = 1e-07
 )
 }
 \arguments{
@@ -39,8 +41,11 @@ the data}
 
 \item{control}{a list of parameters that pass into the estimating process}
 
-\item{modify_vinv}{a logical variable indicating whether or not the matrix
-should be modified for the inversion}
+\item{maxit}{maxit variable for nearPD function}
+
+\item{eig_tol}{eigenvalue tolerance variable for nearPD function}
+
+\item{conv_tol}{convergence tolerance for nearPD function}
 }
 \description{
 The \code{mcgmm} function returns the estimation by combining

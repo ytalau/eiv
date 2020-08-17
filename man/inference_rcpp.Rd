@@ -4,7 +4,7 @@
 \alias{inference_rcpp}
 \title{Produce Inference Terms}
 \usage{
-inference_rcpp(lb, m, n, X, Y, beta, mcov, ind)
+inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_tol)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -22,6 +22,12 @@ inference_rcpp(lb, m, n, X, Y, beta, mcov, ind)
 \item{mcov}{the covariance matrix for the surrogate variables}
 
 \item{ind}{the index of the surrogate covariates}
+
+\item{maxit}{maxit variable for nearPD function}
+
+\item{eig_tol}{eigenvalue tolerance variable for nearPD function}
+
+\item{conv_tol}{convergence tolerance for nearPD function}
 }
 \description{
 Produces inference terms like asymptotic variance.

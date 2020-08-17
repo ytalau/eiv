@@ -5,11 +5,65 @@
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
+
+arma::mat nearPD(arma::mat m,
+                 int maxit,
+                 double eig_tol,
+                 double conv_tol) {
+    // check whether the matrix is symmetric
+    int iter = 0;
+    bool converged = false;
+    arma::vec eigval;
+    arma::mat eigvec;
+    arma::mat X = m;
+    while (iter < maxit && ! converged) {
+        arma::mat Y = X;
+        eig_sym(eigval, eigvec, Y);
+        arma::uvec ids = find(eigval >= eig_tol * eigval.min());
+        arma::mat Q = eigvec.cols(ids);
+        arma::mat vector = eigval.elem(ids);
+        int n = ids.n_elem;
+        arma::vec tmp = arma::vectorise(arma::repelem(vector,
+                                                      n, 1));
+        arma::vec Q_v = arma::vectorise(Q) % tmp;
+        arma::mat Q_tmp(Q_v);
+        Q_tmp.reshape(Q.n_rows, Q.n_cols);
+        arma::mat X = Q_tmp * Q.t();
+        double conv = arma::norm(Y-X, "inf") / arma::norm(Y, "inf");
+        iter = iter + 1L;
+        // do I need a check for negative semi-definite?
+        converged = (conv <= conv_tol);
+    }
+    return X;
+}
+
+arma::mat inv_mod(arma::mat m,
+                  int maxit,
+                  double eig_tol,
+                  double conv_tol) {
+    // first check whether it is invertible
+    arma::vec s;
+    arma::mat U;
+    arma::mat V;
+    svd(U, s, V, m);
+    double cond_c = s.max()/s.min();
+    if (cond_c == arma::datum::inf) {
+        arma::mat h = nearPD(m, maxit, eig_tol, conv_tol);
+        svd(U, s, V, h);
+    }
+    arma::mat inv = V*arma::diagmat(1/s)*U.t();
+    return inv;
+}
+
+
+// [[Rcpp::export]]
 arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                         arma::vec beta,
                         arma::mat mcov,
                         arma::uvec ind,
-                        bool modify_vinv) {
+                        int maxit,
+                        double eig_tol,
+                        double conv_tol) {
     // maybe I should move this to other functions
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
@@ -49,10 +103,8 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vi = us * us.t();
     v = v/n - vi;
     v = v/n;
-    double  k = 1/n;
-    if (modify_vinv) v = v + k * arma::eye(lb*m, lb*m);
     d = d/n;
-    arma::mat vinv = inv(v);
+    arma::mat vinv = inv_mod(v, maxit, eig_tol, conv_tol);
     arma::mat dold = d * vinv;
     arma::vec out = dold * us;
     return out;
@@ -64,7 +116,10 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
 Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                           arma::vec beta,
                           arma::mat mcov,
-                          arma::uvec ind) {
+                          arma::uvec ind,
+                          int maxit,
+                          double eig_tol,
+                          double conv_tol) {
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
@@ -100,26 +155,11 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     arma::mat vi = us * us.t();
     v = v/n - vi;
     v = v/n;
-    double  k = 1/n;
-    arma::vec s = svd(v);
-    double cond = s.max()/s.min();
-    bool modify_vinv = 0;
-    if (cond == arma::datum::inf) {
-        v = v + k * arma::eye(lb*m, lb*m);
-        modify_vinv = 1;
-    }
     d = d/n;
-    arma::mat vinv = inv(v);
+    arma::mat vinv = inv_mod(v, maxit, eig_tol, conv_tol);
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();
-    arma::vec c = svd(acovinv);
-    double cond_c = c.max()/c.min();
-    bool modify_acovinv = 0;
-    if (cond_c == arma::datum::inf) {
-        acovinv = acovinv + k * arma::eye(lb, lb);
-        modify_acovinv = 1;
-    }
-    arma::mat acov = inv(acovinv);
+    arma::mat acov = inv_mod(acovinv, maxit, eig_tol, conv_tol);
     arma::vec out = dold * us;
     return Rcpp::List::create(
         Rcpp::Named("v") = v,
@@ -127,8 +167,6 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         Rcpp::Named("d") = d,
         Rcpp::Named("us") = us,
         Rcpp::Named("acov") = acov,
-        Rcpp::Named("modify_vinv") = modify_vinv,
-        Rcpp::Named("modify_acovinv") = modify_acovinv,
         Rcpp::Named("mcesteqn") = out
     );
 
