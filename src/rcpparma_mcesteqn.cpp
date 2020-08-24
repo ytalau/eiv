@@ -37,6 +37,33 @@ arma::mat nearPD(arma::mat m,
     return X;
 }
 
+arma::mat neaRPD(arma::mat m, int maxit,
+                 double eig_tol,
+                 double conv_tol){
+
+    Rcpp::Environment Matrix("package:Matrix"); // Load the Matrix package in R!
+    Rcpp::Function nearPD = Matrix["nearPD"];   // Extract nearPD() R function
+
+    // Compute with R function an S4 object
+    Rcpp::List PD = nearPD(m, Rcpp::Named("maxit", maxit),
+                           Rcpp::Named("eig.tol", eig_tol),
+                           Rcpp::Named("conv.tol", conv_tol));
+    Rcpp::S4 D_s4 = PD["mat"];
+
+    // Convert the S4 object to an Armadillo matrix
+    Rcpp::NumericVector temp = Rcpp::NumericVector(D_s4.slot("x"));
+    Rcpp::NumericVector dims = D_s4.slot("Dim");
+
+    // Advanced armadillo matrix ctor that reuses memory
+    arma::mat D(temp.begin(), // pointer to NumericVector
+                dims[0],      // Number of Rows
+                    dims[1],      // Number of Columns
+                        false,        // Avoid copying by disabling `copy_aux_mem`
+                        true);
+    return D;
+}
+
+
 arma::mat inv_mod(arma::mat m,
                   int maxit,
                   double eig_tol,
@@ -48,12 +75,13 @@ arma::mat inv_mod(arma::mat m,
     svd(U, s, V, m);
     double cond_c = s.max()/s.min();
     if (cond_c == arma::datum::inf) {
-        arma::mat h = nearPD(m, maxit, eig_tol, conv_tol);
+        arma::mat h = neaRPD(m, maxit, eig_tol, conv_tol);
         svd(U, s, V, h);
     }
     arma::mat inv = V*arma::diagmat(1/s)*U.t();
     return inv;
 }
+
 
 
 // [[Rcpp::export]]
@@ -63,7 +91,8 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                         arma::uvec ind,
                         int maxit,
                         double eig_tol,
-                        double conv_tol) {
+                        double conv_tol,
+                        bool modify_inv) {
     // maybe I should move this to other functions
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
@@ -104,7 +133,12 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     v = v/n - vi;
     v = v/n;
     d = d/n;
-    arma::mat vinv = inv_mod(v, maxit, eig_tol, conv_tol);
+    arma::mat vinv;
+    if (modify_inv) {
+        vinv = inv_mod(v, maxit, eig_tol, conv_tol);
+    } else {
+        vinv = inv(v);
+    }
     arma::mat dold = d * vinv;
     arma::vec out = dold * us;
     return out;
@@ -119,7 +153,8 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                           arma::uvec ind,
                           int maxit,
                           double eig_tol,
-                          double conv_tol) {
+                          double conv_tol,
+                          bool modify_inv) {
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
@@ -156,10 +191,20 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     v = v/n - vi;
     v = v/n;
     d = d/n;
-    arma::mat vinv = inv_mod(v, maxit, eig_tol, conv_tol);
+    arma::mat vinv;
+    if (modify_inv) {
+        vinv = inv_mod(v, maxit, eig_tol, conv_tol);
+    } else {
+        vinv = inv(v);
+    }
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();
-    arma::mat acov = inv_mod(acovinv, maxit, eig_tol, conv_tol);
+    arma::mat acov;
+    if (modify_inv) {
+        acov = inv_mod(acovinv, maxit, eig_tol, conv_tol);
+    } else {
+        acov = inv(acovinv);
+    }
     arma::vec out = dold * us;
     return Rcpp::List::create(
         Rcpp::Named("v") = v,

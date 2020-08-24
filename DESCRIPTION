@@ -16,7 +16,8 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 Imports: Rcpp (>= 1.0.4.6),
     nleqslv,
-    stats
+    stats,
+    Matrix
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.1.0
 

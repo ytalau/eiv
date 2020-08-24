@@ -4,7 +4,20 @@
 \alias{mcesteqn_rcpp}
 \title{Generate and Correct Generalized Estimating Equations via Rcpp}
 \usage{
-mcesteqn_rcpp(lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_tol)
+mcesteqn_rcpp(
+  lb,
+  m,
+  n,
+  X,
+  Y,
+  beta,
+  mcov,
+  ind,
+  maxit,
+  eig_tol,
+  conv_tol,
+  modify_inv
+)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -28,6 +41,9 @@ mcesteqn_rcpp(lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_tol)
 \item{eig_tol}{eigenvalue tolerance variable for nearPD function}
 
 \item{conv_tol}{convergence tolerance for nearPD function}
+
+\item{modify_inv}{a logical variable specifying whether a not invertible
+matrix should be fixed}
 }
 \description{
 The \code{mcesteqn_rcpp} function is the rcpp version of the

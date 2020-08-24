@@ -86,12 +86,14 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
 #' @param conv_tol convergence tolerance for nearPD function
 #' @param eig_tol eigenvalue tolerance variable for nearPD function
 #' @param Y the response variable vector for each ID
+#' @param modify_inv a logical variable specifying whether a not invertible
+#' matrix should be fixed
 #' @export mcesteqn_rcpp
 
 mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, maxit,
-                          eig_tol, conv_tol) {
+                          eig_tol, conv_tol, modify_inv) {
     rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind, maxit,
-                  eig_tol, conv_tol)
+                  eig_tol, conv_tol, modify_inv)
 }
 
 #' @title Produce Inference Terms
@@ -112,12 +114,14 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, maxit,
 #' @param maxit maxit variable for nearPD function
 #' @param conv_tol convergence tolerance for nearPD function
 #' @param eig_tol eigenvalue tolerance variable for nearPD function
+#' @param modify_inv a logical variable specifying whether a not invertible
+#' matrix should be fixed
 #' @export inference_rcpp
 
 inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, maxit,
-                           eig_tol, conv_tol) {
+                           eig_tol, conv_tol, modify_inv) {
     rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, maxit,
-                   eig_tol, conv_tol)
+                   eig_tol, conv_tol, modify_inv)
 }
 
 #' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
@@ -188,6 +192,8 @@ process_mcgmm <- function(formula, data, me.var,
 #' @param maxit maxit variable for nearPD function
 #' @param conv_tol convergence tolerance for nearPD function
 #' @param eig_tol eigenvalue tolerance variable for nearPD function
+#' @param modify_inv a logical variable specifying whether a not invertible
+#' matrix should be fixed
 #' @importFrom nleqslv nleqslv
 #' @export
 
@@ -195,7 +201,7 @@ process_mcgmm <- function(formula, data, me.var,
 mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
                   control = list(), maxit = 100, eig_tol = 1e-06,
-                  conv_tol = 1e-07) {
+                  conv_tol = 1e-07, modify_inv = FALSE) {
     call <- match.call()
     formula <- as.formula(formula)
     dat_out <- process_mcgmm(formula, data, me.var,
@@ -207,7 +213,7 @@ mcgmm <- function(formula, data, me.var, mcov,
                    ind = dat_out$ind, Y = dat_out$Y,
                    control = control,
                    eig_tol = eig_tol, maxit = maxit,
-                   conv_tol = conv_tol)
+                   conv_tol = conv_tol, modify_inv = as.numeric(modify_inv))
     coeffs <- res$x
     convergence_code <- res$termcd
     names(coeffs) <- dat_out$xnames
@@ -216,7 +222,7 @@ mcgmm <- function(formula, data, me.var, mcov,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
                           eig_tol = eig_tol, maxit = maxit,
-                          conv_tol = conv_tol)
+                          conv_tol = conv_tol, modify_inv = as.numeric(modify_inv))
     convergence_message <-
         switch(convergence_code,
                "Convergence of function values has been achieved",

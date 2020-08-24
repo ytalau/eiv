@@ -17,7 +17,8 @@ mcgmm(
   control = list(),
   maxit = 100,
   eig_tol = 1e-06,
-  conv_tol = 1e-07
+  conv_tol = 1e-07,
+  modify_inv = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,9 @@ the data}
 \item{eig_tol}{eigenvalue tolerance variable for nearPD function}
 
 \item{conv_tol}{convergence tolerance for nearPD function}
+
+\item{modify_inv}{a logical variable specifying whether a not invertible
+matrix should be fixed}
 }
 \description{
 The \code{mcgmm} function returns the estimation by combining
