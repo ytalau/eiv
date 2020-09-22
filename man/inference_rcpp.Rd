@@ -13,6 +13,8 @@ inference_rcpp(
   beta,
   mcov,
   ind,
+  bootstrap,
+  meat,
   maxit,
   eig_tol,
   conv_tol,
@@ -35,6 +37,10 @@ inference_rcpp(
 \item{mcov}{the covariance matrix for the surrogate variables}
 
 \item{ind}{the index of the surrogate covariates}
+
+\item{bootstrap}{an indicator for bootstrap method}
+
+\item{meat}{the meat part from the multiplier bootstrap}
 
 \item{maxit}{maxit variable for nearPD function}
 

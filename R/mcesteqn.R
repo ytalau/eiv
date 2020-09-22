@@ -1,5 +1,5 @@
 #' @importFrom stats as.formula model.matrix model.response model.extract
-#' model.frame terms pchisq printCoefmat
+#' model.frame terms pchisq printCoefmat rnorm
 #'
 #'
 #' @title Generate and Correct Generalized Estimating Equations
@@ -21,10 +21,11 @@
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
 #' @param Y the response variable vector for each ID
+#' @param mult mutliplier
 #' @export mcesteqn
 
 mcesteqn <- function(beta, lb, n, m, X, mcov,
-                       ind, Y) {
+                       ind, Y, mult) {
     d <- matrix(0, nrow = lb, ncol = lb*m)
     v <- matrix(0, nrow = lb*m, ncol = lb*m)
     us <- numeric(lb*m)
@@ -32,6 +33,7 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
         ui <- numeric(lb*m)
         di <- matrix(0, nrow = lb, ncol = lb*m)
         m <- nrow(X[[i]])
+        mult1 <- mult[[i]]
         for (j in 1:m) {
             u <- X[[i]][j, ]
             a <- u %*% beta
@@ -54,6 +56,7 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
         vi <- ui %o% ui
         d <- d + di
         v <- v + vi
+        ui <- ui * mult1
         us <- us + ui
     }
     us <- us/n
@@ -116,11 +119,14 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, maxit,
 #' @param eig_tol eigenvalue tolerance variable for nearPD function
 #' @param modify_inv a logical variable specifying whether a not invertible
 #' matrix should be fixed
+#' @param meat the meat part from the multiplier bootstrap
+#' @param bootstrap an indicator for bootstrap method
 #' @export inference_rcpp
 
-inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, maxit,
+inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, bootstrap, meat,
+                           maxit,
                            eig_tol, conv_tol, modify_inv) {
-    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, maxit,
+    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, bootstrap, meat, maxit,
                    eig_tol, conv_tol, modify_inv)
 }
 
@@ -161,8 +167,9 @@ process_mcgmm <- function(formula, data, me.var,
     ind <- which(colnames(X[[1]]) %in% me.var)
     n <- length(mf)
     m <- nrow(X[[1]])
+    multiplier <- replicate(n, rnorm(1))
     return(list(X = X, Y = Y, ind = ind, n = n, m = m, lb = lb,
-                xnames = xnames))
+                xnames = xnames, multiplier = multiplier))
 }
 
 
@@ -222,7 +229,10 @@ mcgmm <- function(formula, data, me.var, mcov,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
                           eig_tol = eig_tol, maxit = maxit,
-                          conv_tol = conv_tol, modify_inv = as.numeric(modify_inv))
+                          conv_tol = conv_tol,
+                          modify_inv = as.numeric(modify_inv),
+                          meat = diag(dat_out$lb),
+                          bootstrap = 0)
     convergence_message <-
         switch(convergence_code,
                "Convergence of function values has been achieved",

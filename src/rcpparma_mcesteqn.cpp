@@ -147,10 +147,13 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
 
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
+Rcpp::List rcpp_inference(int lb, int m, int n,
+                          Rcpp::List X, Rcpp::List Y,
                           arma::vec beta,
                           arma::mat mcov,
                           arma::uvec ind,
+                          bool bootstrap,
+                          arma::mat meat,
                           int maxit,
                           double eig_tol,
                           double conv_tol,
@@ -205,6 +208,9 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     } else {
         acov = inv(acovinv);
     }
+    if (bootstrap) {
+        acov = acov * inv(meat) * acovinv;
+    }
     arma::vec out = dold * us;
     return Rcpp::List::create(
         Rcpp::Named("v") = v,
@@ -216,3 +222,5 @@ Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
     );
 
 }
+
+

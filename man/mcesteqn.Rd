@@ -4,7 +4,7 @@
 \alias{mcesteqn}
 \title{Generate and Correct Generalized Estimating Equations}
 \usage{
-mcesteqn(beta, lb, n, m, X, mcov, ind, Y)
+mcesteqn(beta, lb, n, m, X, mcov, ind, Y, mult)
 }
 \arguments{
 \item{beta}{The value of covariates}
@@ -22,6 +22,8 @@ mcesteqn(beta, lb, n, m, X, mcov, ind, Y)
 \item{ind}{the index of the surrogate covariates}
 
 \item{Y}{the response variable vector for each ID}
+
+\item{mult}{mutliplier}
 }
 \description{
 The \code{mcesteqn} function generates the corrected generalized
