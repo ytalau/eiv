@@ -9,6 +9,10 @@ rcpp_mcesteqn <- function(lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_
     .Call(`_eiv_rcpp_mcesteqn`, lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_tol, modify_inv)
 }
 
+calculate_G <- function(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d) {
+    .Call(`_eiv_calculate_G`, lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d)
+}
+
 rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind, bootstrap, meat, maxit, eig_tol, conv_tol, modify_inv) {
     .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind, bootstrap, meat, maxit, eig_tol, conv_tol, modify_inv)
 }

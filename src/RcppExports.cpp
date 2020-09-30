@@ -42,6 +42,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calculate_G
+arma::mat calculate_G(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, arma::mat acov, arma::mat vinv, arma::vec us, arma::mat d);
+RcppExport SEXP _eiv_calculate_G(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP acovSEXP, SEXP vinvSEXP, SEXP usSEXP, SEXP dSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mcov(mcovSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type acov(acovSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type vinv(vinvSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type us(usSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type d(dSEXP);
+    rcpp_result_gen = Rcpp::wrap(calculate_G(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_inference
 Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, bool bootstrap, arma::mat meat, int maxit, double eig_tol, double conv_tol, bool modify_inv);
 RcppExport SEXP _eiv_rcpp_inference(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP bootstrapSEXP, SEXP meatSEXP, SEXP maxitSEXP, SEXP eig_tolSEXP, SEXP conv_tolSEXP, SEXP modify_invSEXP) {
@@ -70,6 +92,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_eiv_nearPD", (DL_FUNC) &_eiv_nearPD, 4},
     {"_eiv_rcpp_mcesteqn", (DL_FUNC) &_eiv_rcpp_mcesteqn, 12},
+    {"_eiv_calculate_G", (DL_FUNC) &_eiv_calculate_G, 12},
     {"_eiv_rcpp_inference", (DL_FUNC) &_eiv_rcpp_inference, 14},
     {NULL, NULL, 0}
 };
