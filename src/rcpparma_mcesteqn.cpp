@@ -69,16 +69,12 @@ arma::mat inv_mod(arma::mat m,
                   double eig_tol,
                   double conv_tol) {
     // first check whether it is invertible
-    arma::vec s;
-    arma::mat U;
-    arma::mat V;
-    svd(U, s, V, m);
-    double cond_c = s.max()/s.min();
-    if (cond_c == arma::datum::inf) {
-        arma::mat h = neaRPD(m, maxit, eig_tol, conv_tol);
-        svd(U, s, V, h);
-    }
-    arma::mat inv = V*arma::diagmat(1/s)*U.t();
+    // double c = arma::cond(m);
+    // if (c > 1e6) {
+    //     m = neaRPD(m, maxit, eig_tol, conv_tol);
+    // }
+    m = neaRPD(m, maxit, eig_tol, conv_tol);
+    arma::mat inv = arma::inv(m);
     return inv;
 }
 
@@ -244,20 +240,35 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
     v = v/n - vi;
     v = v/n;
     d = d/n;
+    arma::mat I;
+    I.eye(size(v));
+    double m_n = arma::accu(arma::trace(vi * I))/(lb * m);
+    double d2 = pow(arma::norm((vi - m_n*I), "fro"), 2.0)/(lb * m);
+    // arma::mat tmp = arma::zeros(lb*m, lb*m);
+    // for (int k = 0; k < lb*m; k++) {
+    //     arma::colvec usk = us.row(k);
+    //     arma::mat tmpk = usk * usk.t() - v;
+    //     tmp += tmpk;
+    // }
+    double b_bar2 = pow(arma::norm(v, "fro"), 2.0)/pow(lb * m, 2.0);
+    double b2 = std::min(b2, b_bar2);
+    double a2 = d2 - b2;
+    arma::mat v_m = b2/d2 * m_n * I + a2/d2 * v;
     arma::mat vinv;
     if (modify_inv) {
-        vinv = inv_mod(v, maxit, eig_tol, conv_tol);
+        vinv = inv(v_m);
     } else {
         vinv = inv(v);
     }
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();
     arma::mat acov;
-    if (modify_inv) {
-        acov = inv_mod(acovinv, maxit, eig_tol, conv_tol);
-    } else {
-        acov = inv(acovinv);
-    }
+    // if (modify_inv) {
+    //     acov = inv_mod(acovinv, maxit, eig_tol, conv_tol);
+    // } else {
+    //     acov = inv(acovinv);
+    // }
+    acov = inv(acovinv);
     if (bootstrap) {
         acov = acov * meat * acov * n;
     }
