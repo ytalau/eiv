@@ -21,11 +21,10 @@
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
 #' @param Y the response variable vector for each ID
-#' @param mult mutliplier
 #' @export mcesteqn
 
 mcesteqn <- function(beta, lb, n, m, X, mcov,
-                       ind, Y, mult) {
+                       ind, Y) {
     d <- matrix(0, nrow = lb, ncol = lb*m)
     v <- matrix(0, nrow = lb*m, ncol = lb*m)
     us <- numeric(lb*m)
@@ -33,7 +32,6 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
         ui <- numeric(lb*m)
         di <- matrix(0, nrow = lb, ncol = lb*m)
         m <- nrow(X[[i]])
-        mult1 <- mult[[i]]
         for (j in 1:m) {
             u <- X[[i]][j, ]
             a <- u %*% beta
@@ -56,7 +54,6 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
         vi <- ui %o% ui
         d <- d + di
         v <- v + vi
-        ui <- ui * mult1
         us <- us + ui
     }
     us <- us/n
