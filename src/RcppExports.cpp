@@ -6,23 +6,28 @@
 
 using namespace Rcpp;
 
-// nearPD
-arma::mat nearPD(arma::mat m, int maxit, double eig_tol, double conv_tol);
-RcppExport SEXP _eiv_nearPD(SEXP mSEXP, SEXP maxitSEXP, SEXP eig_tolSEXP, SEXP conv_tolSEXP) {
+// shrink_est
+Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec pos, arma::mat v);
+RcppExport SEXP _eiv_shrink_est(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP posSEXP, SEXP vSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type m(mSEXP);
-    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
-    Rcpp::traits::input_parameter< double >::type eig_tol(eig_tolSEXP);
-    Rcpp::traits::input_parameter< double >::type conv_tol(conv_tolSEXP);
-    rcpp_result_gen = Rcpp::wrap(nearPD(m, maxit, eig_tol, conv_tol));
+    Rcpp::traits::input_parameter< int >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mcov(mcovSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(shrink_est(lb, m, n, X, Y, beta, mcov, pos, v));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_mcesteqn
-arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, int maxit, double eig_tol, double conv_tol, bool modify_inv);
-RcppExport SEXP _eiv_rcpp_mcesteqn(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP maxitSEXP, SEXP eig_tolSEXP, SEXP conv_tolSEXP, SEXP modify_invSEXP) {
+arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, bool modify_inv);
+RcppExport SEXP _eiv_rcpp_mcesteqn(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP modify_invSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,17 +39,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type mcov(mcovSEXP);
     Rcpp::traits::input_parameter< arma::uvec >::type ind(indSEXP);
-    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
-    Rcpp::traits::input_parameter< double >::type eig_tol(eig_tolSEXP);
-    Rcpp::traits::input_parameter< double >::type conv_tol(conv_tolSEXP);
     Rcpp::traits::input_parameter< bool >::type modify_inv(modify_invSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind, maxit, eig_tol, conv_tol, modify_inv));
+    rcpp_result_gen = Rcpp::wrap(rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind, modify_inv));
     return rcpp_result_gen;
 END_RCPP
 }
 // calculate_G
-arma::mat calculate_G(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, arma::mat acov, arma::mat vinv, arma::vec us, arma::mat d);
-RcppExport SEXP _eiv_calculate_G(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP acovSEXP, SEXP vinvSEXP, SEXP usSEXP, SEXP dSEXP) {
+arma::mat calculate_G(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, arma::mat acov, arma::mat vinv, arma::vec us, arma::mat d, double rho);
+RcppExport SEXP _eiv_calculate_G(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP acovSEXP, SEXP vinvSEXP, SEXP usSEXP, SEXP dSEXP, SEXP rhoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -60,13 +62,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type vinv(vinvSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type us(usSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type d(dSEXP);
-    rcpp_result_gen = Rcpp::wrap(calculate_G(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d));
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    rcpp_result_gen = Rcpp::wrap(calculate_G(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d, rho));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_inference
-Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, bool bootstrap, arma::mat meat, int maxit, double eig_tol, double conv_tol, bool modify_inv);
-RcppExport SEXP _eiv_rcpp_inference(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP bootstrapSEXP, SEXP meatSEXP, SEXP maxitSEXP, SEXP eig_tolSEXP, SEXP conv_tolSEXP, SEXP modify_invSEXP) {
+Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, arma::mat mcov, arma::uvec ind, bool modify_inv);
+RcppExport SEXP _eiv_rcpp_inference(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP modify_invSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -78,22 +81,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type mcov(mcovSEXP);
     Rcpp::traits::input_parameter< arma::uvec >::type ind(indSEXP);
-    Rcpp::traits::input_parameter< bool >::type bootstrap(bootstrapSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type meat(meatSEXP);
-    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
-    Rcpp::traits::input_parameter< double >::type eig_tol(eig_tolSEXP);
-    Rcpp::traits::input_parameter< double >::type conv_tol(conv_tolSEXP);
     Rcpp::traits::input_parameter< bool >::type modify_inv(modify_invSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, bootstrap, meat, maxit, eig_tol, conv_tol, modify_inv));
+    rcpp_result_gen = Rcpp::wrap(rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, modify_inv));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_eiv_nearPD", (DL_FUNC) &_eiv_nearPD, 4},
-    {"_eiv_rcpp_mcesteqn", (DL_FUNC) &_eiv_rcpp_mcesteqn, 12},
-    {"_eiv_calculate_G", (DL_FUNC) &_eiv_calculate_G, 12},
-    {"_eiv_rcpp_inference", (DL_FUNC) &_eiv_rcpp_inference, 14},
+    {"_eiv_shrink_est", (DL_FUNC) &_eiv_shrink_est, 9},
+    {"_eiv_rcpp_mcesteqn", (DL_FUNC) &_eiv_rcpp_mcesteqn, 9},
+    {"_eiv_calculate_G", (DL_FUNC) &_eiv_calculate_G, 13},
+    {"_eiv_rcpp_inference", (DL_FUNC) &_eiv_rcpp_inference, 9},
     {NULL, NULL, 0}
 };
 

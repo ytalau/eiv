@@ -15,9 +15,6 @@ mcgmm(
   init.beta,
   family = "binomial",
   control = list(),
-  maxit = 100,
-  eig_tol = 1e-06,
-  conv_tol = 1e-07,
   modify_inv = FALSE
 )
 }
@@ -41,12 +38,6 @@ the data}
 \item{family}{the family of response variable}
 
 \item{control}{a list of parameters that pass into the estimating process}
-
-\item{maxit}{maxit variable for nearPD function}
-
-\item{eig_tol}{eigenvalue tolerance variable for nearPD function}
-
-\item{conv_tol}{convergence tolerance for nearPD function}
 
 \item{modify_inv}{a logical variable specifying whether a not invertible
 matrix should be fixed}

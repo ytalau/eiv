@@ -4,22 +4,7 @@
 \alias{inference_rcpp}
 \title{Produce Inference Terms}
 \usage{
-inference_rcpp(
-  lb,
-  m,
-  n,
-  X,
-  Y,
-  beta,
-  mcov,
-  ind,
-  bootstrap,
-  meat,
-  maxit,
-  eig_tol,
-  conv_tol,
-  modify_inv
-)
+inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, modify_inv)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -37,16 +22,6 @@ inference_rcpp(
 \item{mcov}{the covariance matrix for the surrogate variables}
 
 \item{ind}{the index of the surrogate covariates}
-
-\item{bootstrap}{an indicator for bootstrap method}
-
-\item{meat}{the meat part from the multiplier bootstrap}
-
-\item{maxit}{maxit variable for nearPD function}
-
-\item{eig_tol}{eigenvalue tolerance variable for nearPD function}
-
-\item{conv_tol}{convergence tolerance for nearPD function}
 
 \item{modify_inv}{a logical variable specifying whether a not invertible
 matrix should be fixed}
