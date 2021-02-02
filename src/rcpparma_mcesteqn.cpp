@@ -7,7 +7,7 @@
 
 // [[Rcpp::export]]
 Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
-                     arma::vec beta, arma::mat mcov, arma::uvec pos,
+                     arma::vec beta, Rcpp::List mcov, arma::uvec pos,
                      arma::mat v) {
     double b_bar2 = 0;
     for (int i = 0; i < n; i++) {
@@ -16,8 +16,9 @@ Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         arma::vec Y1 = Y[i];
         for (int j = 0; j < X1.n_rows; j++) {
             arma::rowvec u = X1.row(j);
+            arma::mat mcov_j = mcov[j];
             double a = as_scalar(u * beta);
-            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
             double weight1 = exp(-a/2 - b/8);
             double weight2 = exp(a/2 - b/8);
@@ -30,14 +31,14 @@ Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         //scale it first
         arma::mat vi = ui * ui.t();
         // scaled it
-        double b_bar2i = pow(arma::norm(vi - v, "fro"), 2.0);
+        double b_bar2i = pow(arma::norm(vi - v, "fro"), 2.0)/(lb*m);
         b_bar2 += b_bar2i;
     }
     arma::mat I;
     I.eye(size(v));
     b_bar2 = b_bar2/n/n;
-    double m_n = arma::trace(v * I);
-    double d2 = pow(arma::norm((v - m_n*I), "fro"), 2.0);
+    double m_n = arma::trace(v * I)/n;
+    double d2 = pow(arma::norm((v - m_n*I), "fro"), 2.0)/(lb*m);
     double b2 = std::min(d2, b_bar2);
     double a2 = d2 - b2;
     arma::mat v_m = b2/d2 * m_n * I + a2/d2 * v;
@@ -52,7 +53,7 @@ Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
 arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
                         Rcpp::List Y,
                         arma::vec beta,
-                        arma::mat mcov,
+                        Rcpp::List mcov,
                         arma::uvec ind,
                         bool modify_inv) {
     // maybe I should move this to other functions
@@ -68,9 +69,10 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
         for (int j = 0; j < X1.n_rows; j++) {
             // do I need to use clone here?
             arma::rowvec u = X1.row(j);
+            arma::mat mcov_j = mcov[j];
             // figure out the dimension here what is double what is not?
             double a = as_scalar(u * beta);
-            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
             // not necessarily weights; think about other families for future design
             double weight1 = exp(-a/2 - b/8);
@@ -84,7 +86,7 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
             u1.elem(pos) += -tmp/2;
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov;
+            d2(pos, pos) = mcov_j;
             di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
                 weight1*ay)/2*(d2 - d1);
 
@@ -95,17 +97,22 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
         us += ui;
     }
     us = us/n;
-    arma::mat vi = us * us.t();
-    v = v/n - vi;
+    // arma::mat vi = us * us.t();
+    // v = v/n - vi;
     //insert the calculation here; follow that lnshrink
     if (modify_inv) {
         Rcpp::List outlist = shrink_est(lb, m, n, X, Y, beta, mcov, pos, v);
         arma::mat v_m = outlist["v_m"];
         v = v_m;
     }
-    v = v/n;
+    v = v/n/n;
     d = d/n;
-    arma::mat vinv = solve(v);
+    arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
+    arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
+    v = v.submat(ind_v, ind_v);
+    d = d.cols(ind_d);
+    us = us.elem(ind_v);
+    arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::vec out = dold * us;
     return out;
@@ -116,13 +123,12 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
 arma::mat calculate_G(int lb, int m, int n,
                       Rcpp::List X, Rcpp::List Y,
                       arma::vec beta,
-                      arma::mat mcov,
+                      Rcpp::List mcov,
                       arma::uvec ind,
                       arma::mat acov,
                       arma::mat vinv,
                       arma::vec us,
-                      arma::mat d,
-                      double rho) {
+                      arma::mat d) {
     arma::uvec pos = ind - 1;
     arma::mat g = arma::zeros(lb, lb);
     for (int i = 0; i < n; i++) {
@@ -133,8 +139,9 @@ arma::mat calculate_G(int lb, int m, int n,
         arma::mat gi = arma::zeros(lb, lb);
         for (int j = 0; j < X1.n_rows; j++) {
             arma::rowvec u = X1.row(j);
+            arma::mat mcov_j = mcov[j];
             double a = as_scalar(u * beta);
-            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
             double weight1 = exp(-a/2 - b/8);
             double weight2 = exp(a/2 - b/8);
@@ -147,20 +154,20 @@ arma::mat calculate_G(int lb, int m, int n,
             u1.elem(pos) += -tmp/2;
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov;
+            d2(pos, pos) = mcov_j;
             di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
                 weight1*ay)/2*(d2 - d1);
         }
         for (arma::uword k = 0; k < lb; k++) {
             arma::rowvec dk = di.rows(k, k);
-            gi.cols(k, k) = acov * d * vinv * (ui * dk + dk.t() * ui.t()) * vinv * us;
+            gi.cols(k, k) = acov * d * vinv * (ui * dk + dk.t() * ui.t()) *
+                vinv * us;
         }
         g += gi;
     }
-    g = g/n;
-    g = g/n;
+    g = g/n/n;
     arma::mat I_lb = arma::eye(lb, lb);
-    arma::mat term = I_lb + (1 - rho)*g;
+    arma::mat term = I_lb + g;
     arma::mat acov_c = term * acov * term.t();
     return acov_c;
 }
@@ -169,9 +176,10 @@ arma::mat calculate_G(int lb, int m, int n,
 Rcpp::List rcpp_inference(int lb, int m, int n,
                           Rcpp::List X, Rcpp::List Y,
                           arma::vec beta,
-                          arma::mat mcov,
+                          Rcpp::List mcov,
                           arma::uvec ind,
-                          bool modify_inv) {
+                          bool modify_inv,
+                          bool finsam_cor) {
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
@@ -183,8 +191,9 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
         arma::vec Y1 = Y[i];
         for (int j = 0; j < X1.n_rows; j++) {
             arma::rowvec u = X1.row(j);
+            arma::mat mcov_j = mcov[j];
             double a = as_scalar(u * beta);
-            arma::rowvec tmp = beta.elem(pos).t() * mcov;
+            arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
             double weight1 = exp(-a/2 - b/8);
             double weight2 = exp(a/2 - b/8);
@@ -197,7 +206,7 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
             u1.elem(pos) += -tmp/2;
             arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov;
+            d2(pos, pos) = mcov_j;
             di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
                 weight1*ay)/2*(d2 - d1);
         }
@@ -207,30 +216,39 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
         us += ui;
     }
     us = us/n;
-    arma::mat vi = us * us.t();
-    v = v/n - vi;
+    // arma::mat vi = us * us.t();
+    // v = v/n - vi;
     Rcpp::List outlist = shrink_est(lb, m, n, X, Y, beta, mcov, pos, v);
     if (modify_inv) {
         arma::mat v_m = outlist["v_m"];
         v = v_m;
     }
-    v = v/n;
+    v = v/n/n;
     d = d/n;
-    arma::mat vinv = solve(v);
+    arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
+    arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
+    v = v.submat(ind_v, ind_v);
+    d = d.cols(ind_d);
+    us = us.elem(ind_v);
+    arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();
     arma::mat acov;
-    acov = solve(acovinv);
+    acov = inv(acovinv);
+    acov = acovinv;
     arma::vec out = dold * us;
-    double rho = outlist["rho"];
-    arma::mat acov_c = calculate_G(lb, m, n,
-                                   X, Y,
-                                   beta,
-                                   mcov,
-                                   ind,
-                                   acov,
-                                   vinv,
-                                   us, d, rho);
+    if (finsam_cor) {
+        arma::mat acov_c = calculate_G(lb, m, n,
+                                     X, Y,
+                                     beta,
+                                     mcov,
+                                     ind,
+                                     acov,
+                                     vinv,
+                                     us, d);
+        acov = acov_c;
+    }
+
     return Rcpp::List::create(
         Rcpp::Named("v") = v,
         Rcpp::Named("vinv") = vinv,

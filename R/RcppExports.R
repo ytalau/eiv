@@ -9,11 +9,11 @@ rcpp_mcesteqn <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
     .Call(`_eiv_rcpp_mcesteqn`, lb, m, n, X, Y, beta, mcov, ind, modify_inv)
 }
 
-calculate_G <- function(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d, rho) {
-    .Call(`_eiv_calculate_G`, lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d, rho)
+calculate_G <- function(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d) {
+    .Call(`_eiv_calculate_G`, lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d)
 }
 
-rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
-    .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind, modify_inv)
+rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor) {
+    .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor)
 }
 

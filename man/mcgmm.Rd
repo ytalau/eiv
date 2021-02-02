@@ -15,7 +15,8 @@ mcgmm(
   init.beta,
   family = "binomial",
   control = list(),
-  modify_inv = FALSE
+  modify_inv = FALSE,
+  finsam_cor = TRUE
 )
 }
 \arguments{
@@ -26,7 +27,7 @@ and corresponding a variables identifying subjects and time points}
 
 \item{me.var}{names of variables with measurement errors in the data}
 
-\item{mcov}{the covariance matrix for the surrogate variables}
+\item{mcov}{list of the covariance matrices for the surrogate variables}
 
 \item{time.var}{name of variable that identifies different time points in
 the data}
@@ -41,6 +42,9 @@ the data}
 
 \item{modify_inv}{a logical variable specifying whether a not invertible
 matrix should be fixed}
+
+\item{finsam_cor}{a logical variable specifying whether or not the finite
+sample bias should be corrected}
 }
 \description{
 The \code{mcgmm} function returns the estimation by combining

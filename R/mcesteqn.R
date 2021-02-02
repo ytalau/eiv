@@ -106,12 +106,15 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
 #' @param Y the response variable vector for each ID
-#' @param modify_inv a logical variable specifying whether a not invertible
+#' @param modify_inv a logical variable specifying whether or not invertible
 #' matrix should be fixed
+#' @param finsam_cor a logical variable specifying whether or not the finite
+#' sample bias should be corrected
 #' @export inference_rcpp
 
-inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
-    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, modify_inv)
+inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv,
+                           finsam_cor) {
+    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor)
 }
 
 #' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
@@ -142,8 +145,7 @@ process_mcgmm <- function(formula, data, me.var,
     dat <- data[idx_id.time, ]
     dat1 <- split(dat, dat$id)
     #formula <- as.formula(formula)
-    lb <- length(attr(terms(formula), "term.labels")) +
-        attr(terms(formula), "intercept")
+    lb <- ncol(model.matrix(formula, data))
     mf <- lapply(1:length(dat1), function(i) model.frame(formula, dat1[[i]]))
     X <- lapply(1:length(dat1), function(i) model.matrix(formula, dat1[[i]]))
     xnames <- dimnames(X[[1]])[[2]]
@@ -174,7 +176,7 @@ process_mcgmm <- function(formula, data, me.var,
 #' @param data a data frame that contains variables in the model
 #' and corresponding a variables identifying subjects and time points
 #' @param me.var names of variables with measurement errors in the data
-#' @param mcov the covariance matrix for the surrogate variables
+#' @param mcov list of the covariance matrices for the surrogate variables
 #' @param time.var name of variable that identifies different time points in
 #' the data
 #' @param id.var name of variable that identifies clusters in the data
@@ -182,13 +184,15 @@ process_mcgmm <- function(formula, data, me.var,
 #' @param family the family of response variable
 #' @param modify_inv a logical variable specifying whether a not invertible
 #' matrix should be fixed
+#' @param finsam_cor a logical variable specifying whether or not the finite
+#' sample bias should be corrected
 #' @importFrom nleqslv nleqslv
 #' @export
 
 ## need to add the control element
 mcgmm <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
-                  control = list(), modify_inv = FALSE) {
+                  control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
     formula <- as.formula(formula)
     dat_out <- process_mcgmm(formula, data, me.var,
@@ -206,7 +210,8 @@ mcgmm <- function(formula, data, me.var, mcov,
                           lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
-                          modify_inv = as.numeric(modify_inv))
+                          modify_inv = as.numeric(modify_inv),
+                          finsam_cor = as.numeric(finsam_cor))
     convergence_message <-
         switch(convergence_code,
                "Convergence of function values has been achieved",
