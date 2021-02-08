@@ -322,12 +322,13 @@ summary.mcgmm <- function(object, ...) {
     coef.matrix$chi.squared <- 1 - pchisq(coef.matrix$wald, df = 1)
     colnames(coef.matrix) <- c("Estimate", "Std.Err", "Wald", "Pr(>z)")
     rownames(coef.matrix) <- names(object$coefficients)
-    mcov <- as.matrix(object$mcov)
-    dimnames(mcov)[[1]] <- object$me.var
-    dimnames(mcov)[[2]] <- object$me.var
+    # think about the design since mcov is no longer a matrix but a list
+    # mcov <- as.matrix(object$mcov)
+    # dimnames(mcov)[[1]] <- object$me.var
+    # dimnames(mcov)[[2]] <- object$me.var
     out <- list(formula = object$formula,
                 call = object$call,
-                mcov = mcov,
+                mcov = object$mcov,
                 X = object$X,
                 Y = object$Y,
                 convergence_code = object$convergence_code,

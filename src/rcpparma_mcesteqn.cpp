@@ -235,7 +235,6 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
     arma::mat acovinv = dold * d.t();
     arma::mat acov;
     acov = inv(acovinv);
-    acov = acovinv;
     arma::vec out = dold * us;
     if (finsam_cor) {
         arma::mat acov_c = calculate_G(lb, m, n,
