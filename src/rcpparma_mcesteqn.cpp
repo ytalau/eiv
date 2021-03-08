@@ -31,14 +31,13 @@ Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
         //scale it first
         arma::mat vi = ui * ui.t();
         // scaled it
-        double b_bar2i = pow(arma::norm(vi - v, "fro"), 2.0)/(lb*m);
+        double b_bar2i = pow(arma::norm(vi / n - v, "fro"), 2.0);
         b_bar2 += b_bar2i;
     }
     arma::mat I;
     I.eye(size(v));
-    b_bar2 = b_bar2/n/n;
-    double m_n = arma::trace(v * I)/n;
-    double d2 = pow(arma::norm((v - m_n*I), "fro"), 2.0)/(lb*m);
+    double m_n = arma::mean(arma::trace(v * I));
+    double d2 = pow(arma::norm((v - m_n * I), "fro"), 2.0);
     double b2 = std::min(d2, b_bar2);
     double a2 = d2 - b2;
     arma::mat v_m = b2/d2 * m_n * I + a2/d2 * v;
@@ -97,21 +96,21 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
         us += ui;
     }
     us = us/n;
-    // arma::mat vi = us * us.t();
-    // v = v/n - vi;
+    arma::mat vi = us * us.t();
+    v = v/n;
     //insert the calculation here; follow that lnshrink
     if (modify_inv) {
         Rcpp::List outlist = shrink_est(lb, m, n, X, Y, beta, mcov, pos, v);
         arma::mat v_m = outlist["v_m"];
         v = v_m;
     }
-    v = v/n/n;
+    v = v/n;
     d = d/n;
-    arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
-    arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
-    v = v.submat(ind_v, ind_v);
-    d = d.cols(ind_d);
-    us = us.elem(ind_v);
+    // arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
+    // arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
+    // v = v.submat(ind_v, ind_v);
+    // d = d.cols(ind_d);
+    // us = us.elem(ind_v);
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::vec out = dold * us;
@@ -178,7 +177,6 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
                           arma::vec beta,
                           Rcpp::List mcov,
                           arma::uvec ind,
-                          bool modify_inv,
                           bool finsam_cor) {
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
@@ -218,18 +216,18 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
     us = us/n;
     // arma::mat vi = us * us.t();
     // v = v/n - vi;
-    Rcpp::List outlist = shrink_est(lb, m, n, X, Y, beta, mcov, pos, v);
-    if (modify_inv) {
-        arma::mat v_m = outlist["v_m"];
-        v = v_m;
-    }
+    // Rcpp::List outlist = shrink_est(lb, m, n, X, Y, beta, mcov, pos, v);
+    // if (modify_inv) {
+    //     arma::mat v_m = outlist["v_m"];
+    //     v = v_m;
+    // }
     v = v/n/n;
     d = d/n;
-    arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
-    arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
-    v = v.submat(ind_v, ind_v);
-    d = d.cols(ind_d);
-    us = us.elem(ind_v);
+    // arma::uvec ind_d = arma::find(arma::sum(d, 0) != 0);
+    // arma::uvec ind_v = arma::find(arma::sum(v, 0) != 0);
+    // v = v.submat(ind_v, ind_v);
+    // d = d.cols(ind_d);
+    // us = us.elem(ind_v);
     arma::mat vinv = inv(v);
     arma::mat dold = d * vinv;
     arma::mat acovinv = dold * d.t();

@@ -106,15 +106,13 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
 #' @param ind the index of the surrogate covariates
 #' @param mcov the covariance matrix for the surrogate variables
 #' @param Y the response variable vector for each ID
-#' @param modify_inv a logical variable specifying whether or not invertible
-#' matrix should be fixed
 #' @param finsam_cor a logical variable specifying whether or not the finite
 #' sample bias should be corrected
 #' @export inference_rcpp
 
-inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv,
+inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind,
                            finsam_cor) {
-    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor)
+    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
 }
 
 #' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
@@ -210,7 +208,6 @@ mcgmm <- function(formula, data, me.var, mcov,
                           lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
-                          modify_inv = as.numeric(modify_inv),
                           finsam_cor = as.numeric(finsam_cor))
     convergence_message <-
         switch(convergence_code,

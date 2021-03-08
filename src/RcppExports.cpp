@@ -72,8 +72,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_inference
-Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, Rcpp::List mcov, arma::uvec ind, bool modify_inv, bool finsam_cor);
-RcppExport SEXP _eiv_rcpp_inference(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP modify_invSEXP, SEXP finsam_corSEXP) {
+Rcpp::List rcpp_inference(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, Rcpp::List mcov, arma::uvec ind, bool finsam_cor);
+RcppExport SEXP _eiv_rcpp_inference(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP indSEXP, SEXP finsam_corSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -85,9 +85,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type mcov(mcovSEXP);
     Rcpp::traits::input_parameter< arma::uvec >::type ind(indSEXP);
-    Rcpp::traits::input_parameter< bool >::type modify_inv(modify_invSEXP);
     Rcpp::traits::input_parameter< bool >::type finsam_cor(finsam_corSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor));
+    rcpp_result_gen = Rcpp::wrap(rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, finsam_cor));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -96,7 +95,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_eiv_shrink_est", (DL_FUNC) &_eiv_shrink_est, 9},
     {"_eiv_rcpp_mcesteqn", (DL_FUNC) &_eiv_rcpp_mcesteqn, 9},
     {"_eiv_calculate_G", (DL_FUNC) &_eiv_calculate_G, 12},
-    {"_eiv_rcpp_inference", (DL_FUNC) &_eiv_rcpp_inference, 10},
+    {"_eiv_rcpp_inference", (DL_FUNC) &_eiv_rcpp_inference, 9},
     {NULL, NULL, 0}
 };
 

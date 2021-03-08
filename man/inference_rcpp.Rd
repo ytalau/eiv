@@ -4,7 +4,7 @@
 \alias{inference_rcpp}
 \title{Produce Inference Terms}
 \usage{
-inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor)
+inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -22,9 +22,6 @@ inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, modify_inv, finsam_cor)
 \item{mcov}{the covariance matrix for the surrogate variables}
 
 \item{ind}{the index of the surrogate covariates}
-
-\item{modify_inv}{a logical variable specifying whether or not invertible
-matrix should be fixed}
 
 \item{finsam_cor}{a logical variable specifying whether or not the finite
 sample bias should be corrected}
