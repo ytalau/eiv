@@ -4,7 +4,7 @@
 \alias{inference_rcpp}
 \title{Produce Inference Terms}
 \usage{
-inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
+inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, finsam_cor, modify_inv)
 }
 \arguments{
 \item{lb}{the dimension of covariates}
@@ -25,6 +25,9 @@ inference_rcpp(lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
 
 \item{finsam_cor}{a logical variable specifying whether or not the finite
 sample bias should be corrected}
+
+\item{modify_inv}{a logical variable specifying whether a not invertible
+matrix should be fixed}
 }
 \description{
 Produces inference terms like asymptotic variance.

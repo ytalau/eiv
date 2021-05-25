@@ -9,7 +9,7 @@ mcgmm(
   formula,
   data,
   me.var,
-  mcov,
+  mcov = list(),
   time.var,
   id.var,
   init.beta,

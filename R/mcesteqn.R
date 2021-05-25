@@ -108,11 +108,13 @@ mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
 #' @param Y the response variable vector for each ID
 #' @param finsam_cor a logical variable specifying whether or not the finite
 #' sample bias should be corrected
+#' @param modify_inv a logical variable specifying whether a not invertible
+#' matrix should be fixed
 #' @export inference_rcpp
 
 inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind,
-                           finsam_cor) {
-    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
+                           finsam_cor, modify_inv) {
+    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, finsam_cor, modify_inv)
 }
 
 #' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
@@ -151,9 +153,8 @@ process_mcgmm <- function(formula, data, me.var,
     ind <- which(colnames(X[[1]]) %in% me.var)
     n <- length(mf)
     m <- nrow(X[[1]])
-    multiplier <- replicate(n, rnorm(1))
     return(list(X = X, Y = Y, ind = ind, n = n, m = m, lb = lb,
-                xnames = xnames, multiplier = multiplier))
+                xnames = xnames))
 }
 
 
@@ -188,7 +189,7 @@ process_mcgmm <- function(formula, data, me.var,
 #' @export
 
 ## need to add the control element
-mcgmm <- function(formula, data, me.var, mcov,
+mcgmm <- function(formula, data, me.var, mcov = list(),
                   time.var, id.var, init.beta, family = "binomial",
                   control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
@@ -208,7 +209,8 @@ mcgmm <- function(formula, data, me.var, mcov,
                           lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
-                          finsam_cor = as.numeric(finsam_cor))
+                          finsam_cor = as.numeric(finsam_cor),
+                          modify_inv = as.numeric(modify_inv))
     convergence_message <-
         switch(convergence_code,
                "Convergence of function values has been achieved",
@@ -227,7 +229,6 @@ mcgmm <- function(formula, data, me.var, mcov,
                 convergence_code = convergence_code,
                 convergence_message = convergence_message,
                 me.var = me.var)
-
 
     class(fit) <- "mcgmm"
     fit

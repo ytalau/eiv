@@ -13,7 +13,7 @@ calculate_G <- function(lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d) {
     .Call(`_eiv_calculate_G`, lb, m, n, X, Y, beta, mcov, ind, acov, vinv, us, d)
 }
 
-rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind, finsam_cor) {
-    .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind, finsam_cor)
+rcpp_inference <- function(lb, m, n, X, Y, beta, mcov, ind, finsam_cor, modify_inv) {
+    .Call(`_eiv_rcpp_inference`, lb, m, n, X, Y, beta, mcov, ind, finsam_cor, modify_inv)
 }
 
