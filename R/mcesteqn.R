@@ -11,7 +11,7 @@
 #'
 #' @name mcesteqn
 #'
-#' @details This function is used in \code{mcgmm} function to get the estimates.
+#' @details This function is used in \code{eivgmm} function to get the estimates.
 #'
 #' @param beta The value of covariates
 #' @param lb the dimension of covariates
@@ -67,62 +67,13 @@ mcesteqn <- function(beta, lb, n, m, X, mcov,
     return(out)
 }
 
-#' @title Generate and Correct Generalized Estimating Equations via Rcpp
-#'
-#' @description The \code{mcesteqn_rcpp} function is the rcpp version of the
-#' function \code{mcesteqn}.
-#'
-#' @name mcesteqn_rcpp
-#'
-#'
-#' @param beta The value of covariates
-#' @param lb the dimension of covariates
-#' @param n the total number of observations
-#' @param m the number of observations for each subject
-#' @param X model matrix for the covariates for each ID
-#' @param ind the index of the surrogate covariates
-#' @param mcov the covariance matrix for the surrogate variables
-#' @param Y the response variable vector for each ID
-#' @param modify_inv a logical variable specifying whether a not invertible
-#' matrix should be fixed
-#' @export mcesteqn_rcpp
 
-mcesteqn_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind, modify_inv) {
-    rcpp_mcesteqn(lb, m, n, X, Y, beta, mcov, ind, modify_inv)
-}
-
-#' @title Produce Inference Terms
-#'
-#' @description Produces inference terms like asymptotic variance.
-#'
-#' @name inference_rcpp
-#'
-#'
-#' @param beta the stimated covariates
-#' @param lb the dimension of covariates
-#' @param n the total number of observations
-#' @param m the number of observations for each subject
-#' @param X model matrix for the covariates for each ID
-#' @param ind the index of the surrogate covariates
-#' @param mcov the covariance matrix for the surrogate variables
-#' @param Y the response variable vector for each ID
-#' @param finsam_cor a logical variable specifying whether or not the finite
-#' sample bias should be corrected
-#' @param modify_inv a logical variable specifying whether a not invertible
-#' matrix should be fixed
-#' @export inference_rcpp
-
-inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind,
-                           finsam_cor, modify_inv) {
-    rcpp_inference(lb, m, n, X, Y, beta, mcov, ind, finsam_cor, modify_inv)
-}
-
-#' @title Data processing for \code{mcgmm} and \code{mcgmm_R} function
+#' @title Data processing for \code{eivgmm} and \code{eivgmm_R} function
 #'
 #' @description This function is built to process data in a way that all
 #' the obversations are grouped by the time variable.
 #'
-#' @name process_mcgmm
+#' @name process_eivgmm
 #'
 #'
 #' @param formula a symbolic description of the model
@@ -132,10 +83,10 @@ inference_rcpp <- function(lb, m, n, X, Y, beta, mcov, ind,
 #' @param time.var name of variable that identifies different time points in
 #' the data
 #' @param id.var name of variable that identifies clusters in the data
-#' @export process_mcgmm
+#' @export process_eivgmm
 
 
-process_mcgmm <- function(formula, data, me.var,
+process_eivgmm <- function(formula, data, me.var,
                           time.var, id.var) {
     ## step one order the data set
     idx_id <- which(colnames(data) %in% id.var)
@@ -160,13 +111,13 @@ process_mcgmm <- function(formula, data, me.var,
 
 
 #' @title Estimation via Generalized Method of Moments Approach with
-#' Measurement Errors Corrected
+#' Errors in Variables Corrected
 #'
-#' @description The \code{mcgmm} function returns the estimation by combining
+#' @description The \code{eivgmm} function returns the estimation by combining
 #' and solving measurement errors corrected estimating equations via generalized
 #' method of moments.
 #'
-#' @name mcgmm
+#' @name eivgmm
 #'
 #' @details The input of data must be a data.frame.
 #'
@@ -189,14 +140,14 @@ process_mcgmm <- function(formula, data, me.var,
 #' @export
 
 ## need to add the control element
-mcgmm <- function(formula, data, me.var, mcov = list(),
+eivgmm <- function(formula, data, me.var, mcov = list(),
                   time.var, id.var, init.beta, family = "binomial",
                   control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
     formula <- as.formula(formula)
-    dat_out <- process_mcgmm(formula, data, me.var,
+    dat_out <- process_eivgmm(formula, data, me.var,
                              time.var, id.var)
-    control <- do.call("mcgmm.control", control)
+    control <- do.call("eivgmm.control", control)
     res <- nleqslv(init.beta, fn = rcpp_mcesteqn,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,
@@ -205,7 +156,7 @@ mcgmm <- function(formula, data, me.var, mcov = list(),
     coeffs <- res$x
     convergence_code <- res$termcd
     names(coeffs) <- dat_out$xnames
-    inf <- inference_rcpp(beta = coeffs,
+    inf <- rcpp_inference(beta = coeffs,
                           lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
                           ind = dat_out$ind, Y = dat_out$Y,
@@ -230,7 +181,7 @@ mcgmm <- function(formula, data, me.var, mcov = list(),
                 convergence_message = convergence_message,
                 me.var = me.var)
 
-    class(fit) <- "mcgmm"
+    class(fit) <- "eivgmm"
     fit
 
 }
@@ -238,11 +189,11 @@ mcgmm <- function(formula, data, me.var, mcov = list(),
 #' @title Estimation via Generalized Method of Moments Approach with
 #' Measurement Errors Corrected (R implementation)
 #'
-#' @description The \code{mcgmm_R} function returns the estimation by combining
+#' @description The \code{eivgmm_R} function returns the estimation by combining
 #' and solving measurement errors corrected estimating equations via generalized
 #' method of moments. This function is a pure R implementation.
 #'
-#' @name mcgmm_R
+#' @name eivgmm_R
 #'
 #' @details The input of data must be a data.frame.
 #'
@@ -258,15 +209,15 @@ mcgmm <- function(formula, data, me.var, mcov = list(),
 #' @param control a list of parameters that pass into the estimating process
 #' @param family the family of response variable
 #' @importFrom nleqslv nleqslv
-#' @export mcgmm_R
+#' @export eivgmm_R
 
 
-mcgmm_R <- function(formula, data, me.var, mcov,
+eivgmm_R <- function(formula, data, me.var, mcov,
                   time.var, id.var, init.beta, family = "binomial",
                   control = list()) {
-    dat_out <- process_mcgmm(formula, data, me.var,
+    dat_out <- process_eivgmm(formula, data, me.var,
                              time.var, id.var)
-    control <- do.call("mcgmm.control", control)
+    control <- do.call("eivgmm.control", control)
     res <- nleqslv(init.beta, fn = mcesteqn,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,
@@ -284,11 +235,11 @@ mcgmm_R <- function(formula, data, me.var, mcov,
 #' @title Estimation via Generalized Method of Moments Approach with
 #' Measurement Errors Corrected
 #'
-#' @description Auxiliary function for \code{mcgmm} function.
+#' @description Auxiliary function for \code{eivgmm} function.
 #'
-#' @name mcgmm.control
+#' @name eivgmm.control
 #'
-#' @details Only used internally in \code{mcgmm}
+#' @details Only used internally in \code{eivgmm}
 #'
 #' @param epsilon The relative steplength tolerance; the default value is 1e-8
 #' @param maxit The maximum iternation number of major iternations.
@@ -296,10 +247,10 @@ mcgmm_R <- function(formula, data, me.var, mcov,
 #' @param trace A logical variable indicating if detailed report of the progress
 #' of iternation is given
 #'
-#' @export mcgmm.control
+#' @export eivgmm.control
 
 
-mcgmm.control <- function(epsilon = 1e-8 ,
+eivgmm.control <- function(epsilon = 1e-8 ,
                           trace = FALSE, maxit = 150) {
     if (!is.numeric(epsilon) || epsilon <= 0)
         stop("value of epsilon must be > 0")
@@ -311,7 +262,7 @@ mcgmm.control <- function(epsilon = 1e-8 ,
 
 
 #' @export
-summary.mcgmm <- function(object, ...) {
+summary.eivgmm <- function(object, ...) {
 
     inf <- object$inf
     coef.matrix <- data.frame(Estimate = unname(object$coefficients),
@@ -338,7 +289,7 @@ summary.mcgmm <- function(object, ...) {
                 V_inv = inf$vinv,
                 esteqn = inf$us,
                 coef.matrix = coef.matrix)
-    class(out) <- "summary.mcgmm"
+    class(out) <- "summary.eivgmm"
     out
 }
 

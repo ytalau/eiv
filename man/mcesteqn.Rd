@@ -30,5 +30,5 @@ estimating equations are combined using General Method of Moments (GMM) for
 each time point.
 }
 \details{
-This function is used in \code{mcgmm} function to get the estimates.
+This function is used in \code{eivgmm} function to get the estimates.
 }
