@@ -1,6 +1,6 @@
 
 #' @export
-print.mcgmm <- function(x, ...) {
+print.eivgmm <- function(x, ...) {
     ## set up the framework like glm/geeglm/geese
     cat("\nCall:\n")
     dput(x$call)
@@ -14,7 +14,7 @@ print.mcgmm <- function(x, ...) {
 
 
 #' @export
-print.summary.mcgmm <- function(x, ...) {
+print.summary.eivgmm <- function(x, ...) {
     cat("\nFormula: ")
     print(x$formula)
     cat("\nVariance matrix for measurement errors\n")
