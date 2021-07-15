@@ -1,0 +1,25 @@
+---
+title: "eiv"
+output: github_document
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(comment = "", cache = TRUE)
+options(width = 100, digits = 5)
+```
+
+
+The R package **eiv** provides a main function `eivgmm` to correct measurement 
+error in a longitudinal setting.
+
+## Installation
+
+You can install the development version at [GitHub][github-url] using
+the follwing code,
+
+```R
+if (! require(devtools)) install.packages("devtools")
+devtools::install_github("https://github.com/ytalau/eiv")
+```
+
+[github-url]: https://github.com/ytalau/eiv

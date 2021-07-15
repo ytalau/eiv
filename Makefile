@@ -30,6 +30,12 @@ $(checkLog): $(tar)
 TAGS:
 	Rscript -e "utils::rtags(path = 'R', ofile = 'TAGS')"
 
+## render readme file
+.PHONY: readme
+readme: README.md
+README.md: README.Rmd
+	@Rscript -e "rmarkdown::render('$<')"
+
 ## do some cleaning
 .PHONY: clean
 clean:
