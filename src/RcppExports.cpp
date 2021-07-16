@@ -11,6 +11,23 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// binomial_fun
+void binomial_fun(double a, double b, double ay, arma::rowvec& tmp, arma::rowvec& u, arma::mat mcov_j, arma::uvec pos, arma::mat& d2);
+RcppExport SEXP _eiv_binomial_fun(SEXP aSEXP, SEXP bSEXP, SEXP aySEXP, SEXP tmpSEXP, SEXP uSEXP, SEXP mcov_jSEXP, SEXP posSEXP, SEXP d2SEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type ay(aySEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type tmp(tmpSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type mcov_j(mcov_jSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type d2(d2SEXP);
+    binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
+    return R_NilValue;
+END_RCPP
+}
 // shrink_est
 Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y, arma::vec beta, Rcpp::List mcov, arma::uvec pos, arma::mat v);
 RcppExport SEXP _eiv_shrink_est(SEXP lbSEXP, SEXP mSEXP, SEXP nSEXP, SEXP XSEXP, SEXP YSEXP, SEXP betaSEXP, SEXP mcovSEXP, SEXP posSEXP, SEXP vSEXP) {
@@ -93,6 +110,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_eiv_binomial_fun", (DL_FUNC) &_eiv_binomial_fun, 8},
     {"_eiv_shrink_est", (DL_FUNC) &_eiv_shrink_est, 9},
     {"_eiv_rcpp_mcesteqn", (DL_FUNC) &_eiv_rcpp_mcesteqn, 9},
     {"_eiv_calculate_G", (DL_FUNC) &_eiv_calculate_G, 12},

@@ -6,6 +6,23 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 
 // [[Rcpp::export]]
+void binomial_fun(double a, double b, double ay, arma::rowvec& tmp,
+                        arma::rowvec& u, arma::mat mcov_j, arma::uvec pos,
+                        arma::mat& d2) {
+
+    double weight1 = exp(-a/2 - b/8);
+    double weight2 = exp(a/2 - b/8);
+    arma::rowvec u1 = u;
+    u1.elem(pos) += -tmp/2;
+    arma::mat d1 = u1.t() * u1;
+    double c = weight2*(ay-1) + weight1*ay;
+    u = c * u.t();
+    tmp = -c * tmp.t()/2;
+    d2(pos, pos) = mcov_j;
+    d2 = (weight2*(ay-1) - weight1*ay)/2*(d2 - d1);
+}
+
+// [[Rcpp::export]]
 Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                      arma::vec beta, Rcpp::List mcov, arma::uvec pos,
                      arma::mat v) {
@@ -20,9 +37,9 @@ Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
             double a = as_scalar(u * beta);
             arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
+            double ay = as_scalar(Y1.row(j));
             double weight1 = exp(-a/2 - b/8);
             double weight2 = exp(a/2 - b/8);
-            double ay = as_scalar(Y1.row(j));
             ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) +
                 weight1*ay)*u.t();
             ui.elem(j*lb + pos) += (weight1*ay - weight2*(ay-1)) * tmp.t()/2;
@@ -55,7 +72,6 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
                         Rcpp::List mcov,
                         arma::uvec ind,
                         bool modify_inv) {
-    // maybe I should move this to other functions
     arma::uvec pos = ind - 1;
     arma::mat d = arma::zeros(lb, lb*m);
     arma::mat v = arma::zeros(lb*m, lb*m);
@@ -71,22 +87,12 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
             double a = as_scalar(u * beta);
             arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
-            // not necessarily weights; think about other families for future design
-            double weight1 = exp(-a/2 - b/8);
-            double weight2 = exp(a/2 - b/8);
             double ay = as_scalar(Y1.row(j));
-            // think about the dimension
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) +
-                weight1*ay)*u.t();
-            ui.elem(j*lb + pos) += (weight1*ay - weight2*(ay-1))*tmp.t()/2;
-            arma::rowvec u1 = u;
-            u1.elem(pos) += -tmp/2;
-            arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov_j;
-            di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
-                weight1*ay)/2*(d2 - d1);
-
+            binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
+            ui.elem(j*lb + pos) += tmp;
+            di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         arma::mat vi = ui * ui.t();
         d += di;
@@ -136,20 +142,12 @@ arma::mat calculate_G(int lb, int m, int n,
             double a = as_scalar(u * beta);
             arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
-            double weight1 = exp(-a/2 - b/8);
-            double weight2 = exp(a/2 - b/8);
             double ay = as_scalar(Y1.row(j));
-            // think about the dimension
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) +
-                weight1*ay)*u.t();
-            ui.elem(j*lb + pos) += (weight1*ay - weight2*(ay-1))*tmp.t()/2;
-            arma::rowvec u1 = u;
-            u1.elem(pos) += -tmp/2;
-            arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov_j;
-            di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
-                weight1*ay)/2*(d2 - d1);
+            binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
+            ui.elem(j*lb + pos) += tmp;
+            di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         for (arma::uword k = 0; k < lb; k++) {
             arma::rowvec dk = di.rows(k, k);
@@ -188,20 +186,12 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
             double a = as_scalar(u * beta);
             arma::rowvec tmp = beta.elem(pos).t() * mcov_j;
             double b = as_scalar(tmp * beta.elem(pos));
-            double weight1 = exp(-a/2 - b/8);
-            double weight2 = exp(a/2 - b/8);
             double ay = as_scalar(Y1.row(j));
-            // think about the dimension
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) +
-                weight1*ay)*u.t();
-            ui.elem(j*lb + pos) += (weight1*ay - weight2*(ay-1))*tmp.t()/2;
-            arma::rowvec u1 = u;
-            u1.elem(pos) += -tmp/2;
-            arma::mat d1 = u1.t() * u1;
             arma::mat d2 = arma::zeros(lb, lb);
-            d2(pos, pos) = mcov_j;
-            di.cols(j*lb, (j + 1L)*lb - 1L) = (weight2*(ay-1) -
-                weight1*ay)/2*(d2 - d1);
+            binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
+            ui.elem(j*lb + pos) += tmp;
+            di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         arma::mat vi = ui * ui.t();
         d += di;
