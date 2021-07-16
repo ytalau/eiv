@@ -23,6 +23,17 @@ void binomial_fun(double a, double b, double ay, arma::rowvec& tmp,
 }
 
 // [[Rcpp::export]]
+void gaussian_fun(double a, double b, double ay, arma::rowvec& tmp,
+                  arma::rowvec& u, arma::mat mcov_j, arma::uvec pos,
+                  arma::mat& d2) {
+    arma::mat d1 = u.t() * u;
+    u = (ay - a) * u.t();
+    tmp = b;
+    d2(pos, pos) = mcov_j;
+    d2 = d2 - d1;
+}
+
+// [[Rcpp::export]]
 Rcpp::List shrink_est(int lb, int m, int n, Rcpp::List X, Rcpp::List Y,
                      arma::vec beta, Rcpp::List mcov, arma::uvec pos,
                      arma::mat v) {

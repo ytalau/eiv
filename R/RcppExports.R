@@ -5,6 +5,10 @@ binomial_fun <- function(a, b, ay, tmp, u, mcov_j, pos, d2) {
     invisible(.Call(`_eiv_binomial_fun`, a, b, ay, tmp, u, mcov_j, pos, d2))
 }
 
+gaussian_fun <- function(a, b, ay, tmp, u, mcov_j, pos, d2) {
+    invisible(.Call(`_eiv_gaussian_fun`, a, b, ay, tmp, u, mcov_j, pos, d2))
+}
+
 shrink_est <- function(lb, m, n, X, Y, beta, mcov, pos, v) {
     .Call(`_eiv_shrink_est`, lb, m, n, X, Y, beta, mcov, pos, v)
 }
