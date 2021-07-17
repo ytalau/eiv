@@ -10,16 +10,15 @@ void binomial_fun(double a, double b, double ay, arma::rowvec& tmp,
                         arma::rowvec& u, arma::mat mcov_j, arma::uvec pos,
                         arma::mat& d2) {
 
-    double weight1 = exp(-a/2 - b/8);
-    double weight2 = exp(a/2 - b/8);
+    double p1 = exp(-a/2 - b/8) * ay;
+    double p2 = exp(a/2 - b/8) * (ay-1);
     arma::rowvec u1 = u;
     u1.elem(pos) += -tmp/2;
     arma::mat d1 = u1.t() * u1;
-    double c = weight2*(ay-1) + weight1*ay;
-    u = c * u.t();
-    tmp = -c * tmp.t()/2;
+    u = (p2 + p1) * u;
+    tmp = (p1 - p2) * tmp/2;
     d2(pos, pos) = mcov_j;
-    d2 = (weight2*(ay-1) - weight1*ay)/2*(d2 - d1);
+    d2 = (p2 - p1)/2 * (d2 - d1);
 }
 
 // [[Rcpp::export]]
@@ -101,8 +100,8 @@ arma::vec rcpp_mcesteqn(int lb, int m, int n, Rcpp::List X,
             double ay = as_scalar(Y1.row(j));
             arma::mat d2 = arma::zeros(lb, lb);
             binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
-            ui.elem(j*lb + pos) += tmp;
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u.t();
+            ui.elem(j*lb + pos) += tmp.t();
             di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         arma::mat vi = ui * ui.t();
@@ -156,8 +155,8 @@ arma::mat calculate_G(int lb, int m, int n,
             double ay = as_scalar(Y1.row(j));
             arma::mat d2 = arma::zeros(lb, lb);
             binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
-            ui.elem(j*lb + pos) += tmp;
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u.t();
+            ui.elem(j*lb + pos) += tmp.t();
             di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         for (arma::uword k = 0; k < lb; k++) {
@@ -200,8 +199,8 @@ Rcpp::List rcpp_inference(int lb, int m, int n,
             double ay = as_scalar(Y1.row(j));
             arma::mat d2 = arma::zeros(lb, lb);
             binomial_fun(a, b, ay, tmp, u, mcov_j, pos, d2);
-            ui.rows(j*lb, (j + 1L)*lb - 1L) = u;
-            ui.elem(j*lb + pos) += tmp;
+            ui.rows(j*lb, (j + 1L)*lb - 1L) = u.t();
+            ui.elem(j*lb + pos) += tmp.t();
             di.cols(j*lb, (j + 1L)*lb - 1L) = d2;
         }
         arma::mat vi = ui * ui.t();
