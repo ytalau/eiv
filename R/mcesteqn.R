@@ -145,12 +145,16 @@ eivgmm <- function(formula, data, me.var, mcov = list(),
                   control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
     formula <- as.formula(formula)
+    stopifnot("The family is not considered in the function" =
+                  family %in% c("gaussian", "binomial"))
+    family <- which(c("gaussian", "binomial") %in% family)
     dat_out <- process_eivgmm(formula, data, me.var,
                              time.var, id.var)
     control <- do.call("eivgmm.control", control)
     res <- nleqslv(init.beta, fn = rcpp_mcesteqn,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,
+                   family = family,
                    ind = dat_out$ind, Y = dat_out$Y,
                    modify_inv = as.numeric(modify_inv))
     coeffs <- res$x
@@ -159,6 +163,7 @@ eivgmm <- function(formula, data, me.var, mcov = list(),
     inf <- rcpp_inference(beta = coeffs,
                           lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                           X = dat_out$X, mcov = mcov,
+                          family = family,
                           ind = dat_out$ind, Y = dat_out$Y,
                           finsam_cor = as.numeric(finsam_cor),
                           modify_inv = as.numeric(modify_inv))
