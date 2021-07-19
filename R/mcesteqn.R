@@ -1,5 +1,5 @@
 #' @importFrom stats as.formula model.matrix model.response model.extract
-#' model.frame terms pchisq printCoefmat rnorm
+#' model.frame terms pchisq printCoefmat rnorm glm coef
 #'
 #'
 #' @title Generate and Correct Generalized Estimating Equations
@@ -141,16 +141,22 @@ process_eivgmm <- function(formula, data, me.var,
 
 ## need to add the control element
 eivgmm <- function(formula, data, me.var, mcov = list(),
-                  time.var, id.var, start, family = "binomial",
+                  time.var, id.var, start = NULL, family = "binomial",
                   control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
     formula <- as.formula(formula)
+
     stopifnot("The family is not considered in the function" =
                   family %in% c("gaussian", "binomial"))
-    family <- which(c("gaussian", "binomial") %in% family)
+
     dat_out <- process_eivgmm(formula, data, me.var,
                              time.var, id.var)
     control <- do.call("eivgmm.control", control)
+    if(is.null(start)) {
+       start <- coef(glm(formula = formula, family = family, data = data))
+    }
+
+    family <- which(c("gaussian", "binomial") %in% family)
     res <- nleqslv(start, fn = rcpp_mcesteqn,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,

@@ -12,7 +12,7 @@ eivgmm(
   mcov = list(),
   time.var,
   id.var,
-  start,
+  start = NULL,
   family = "binomial",
   control = list(),
   modify_inv = FALSE,
