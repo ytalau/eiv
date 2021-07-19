@@ -12,7 +12,7 @@ eivgmm(
   mcov = list(),
   time.var,
   id.var,
-  init.beta,
+  start,
   family = "binomial",
   control = list(),
   modify_inv = FALSE,
@@ -34,7 +34,7 @@ the data}
 
 \item{id.var}{name of variable that identifies clusters in the data}
 
-\item{init.beta}{The initial guess of the estimates}
+\item{start}{The starting values for the parameters in the regression}
 
 \item{family}{the family of response variable}
 

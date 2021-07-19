@@ -74,7 +74,7 @@ mome <- function(theta, W = dat_cal$W_star,
     c(mo1, mo2)
 }
 
-res <- nleqslv::nleqslv(c(0.3, 0.1), fn = mome)
+res <- nleqslv::nleqslv(c(0.5, 0.5), fn = mome)
 
 bmidat <- bmidat[, me_sd := sqrt(res$x[1] *
                                      sum(res$x[2]^abs(outer(age, age, FUN = "-"))))/.N,
@@ -95,7 +95,7 @@ cres <- eiv::eivgmm(obes ~ time + time:W - 1,
                     mcov = list(matrix(c(me_sd2, 0, 0, 0), 2, 2),
                                 matrix(c(0, 0, 0, me_sd2), 2, 2)),
                     time.var = "time", id.var = "id",
-                    init.beta = init$coefficients,
+                    start = init$coefficients,
                     modify_inv = 1,
                     finsam_cor = 0)
 summary(cres)

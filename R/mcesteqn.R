@@ -121,7 +121,7 @@ process_eivgmm <- function(formula, data, me.var,
 #'
 #' @details The input of data must be a data.frame.
 #'
-#' @param init.beta The initial guess of the estimates
+#' @param start The starting values for the parameters in the regression
 #' @param formula a symbolic description of the model
 #' @param data a data frame that contains variables in the model
 #' and corresponding a variables identifying subjects and time points
@@ -141,7 +141,7 @@ process_eivgmm <- function(formula, data, me.var,
 
 ## need to add the control element
 eivgmm <- function(formula, data, me.var, mcov = list(),
-                  time.var, id.var, init.beta, family = "binomial",
+                  time.var, id.var, start, family = "binomial",
                   control = list(), modify_inv = FALSE, finsam_cor = TRUE) {
     call <- match.call()
     formula <- as.formula(formula)
@@ -151,7 +151,7 @@ eivgmm <- function(formula, data, me.var, mcov = list(),
     dat_out <- process_eivgmm(formula, data, me.var,
                              time.var, id.var)
     control <- do.call("eivgmm.control", control)
-    res <- nleqslv(init.beta, fn = rcpp_mcesteqn,
+    res <- nleqslv(start, fn = rcpp_mcesteqn,
                    lb = dat_out$lb, n = dat_out$n, m = dat_out$m,
                    X = dat_out$X, mcov = mcov,
                    family = family,
